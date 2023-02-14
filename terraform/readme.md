@@ -6,5 +6,6 @@ required_version = "~> 1.3.7" in backend.tf means must have terraform 1.3.7 to 1
 Ingest Lambda has permission to read and write to ingest bucket
 Processed Lambda has permission to read only from ingest bucket
 Processed Lambda has permission to read and write to processed bucket
+Populate Lambda has permission to read only from processed bucket
 
 Each have their own roles
