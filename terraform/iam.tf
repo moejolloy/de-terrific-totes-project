@@ -18,8 +18,8 @@ resource "aws_iam_policy" "read-write-access-ingest-bucket-policy" {
   policy      = data.aws_iam_policy_document.read-write-access-ingest-bucket-document.json
 }
 
-resource "aws_iam_role" "ingest-lamba-role" {
-  name               = "ingest-lamba-role"
+resource "aws_iam_role" "ingest-lambda-role" {
+  name               = "ingest-lambda-role"
   assume_role_policy = <<EOF
     {
         "Version": "2012-10-17",
@@ -41,6 +41,6 @@ resource "aws_iam_role" "ingest-lamba-role" {
 }
 
 resource "aws_iam_role_policy_attachment" "ingest-lambda-read-write-policy-attachment" {
-  role       = aws_iam_role.ingest-lamba-role.name
+  role       = aws_iam_role.ingest-lambda-role.name
   policy_arn = aws_iam_policy.read-write-access-ingest-bucket-policy.arn
 }
