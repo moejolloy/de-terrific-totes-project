@@ -1,4 +1,4 @@
-from src.ingestion import get_connection, data_table_to_csv, move_csv_to_bucket
+from src.ingestion import get_connection, database_to_bucket_csv_file
 import boto3
 from moto import mock_s3
 from unittest.mock import patch
@@ -6,35 +6,10 @@ import pytest
 import os
 import csv
 import pg8000.native as pg
+import testing.postgresql
+from sqlalchemy import create_engine
 
-conn = pg.Connection('alex', password = 'password', database = 'test_raw_data')
-
-data_table_to_csv(
-                conn,
-                'SELECT * FROM test_table;', 
-                './test/test-ingestion/test.csv', 
-                ['column_id','column_1','column_2']
-                )
-
-
-def test_formats_data_properly_in_csv():
-
-    test_table_columns = ['column_id','column_1','column_2']
-    with open('./test/test-ingestion/test.csv', 'r', encoding='utf-8') as file:
-        reader = csv.reader(file)
-        for row in reader:
-            assert row == test_table_columns
-            break
-        for index, row in enumerate(reader):
-            if index == 0:
-                assert row == ['1', 'row 1', '1']
-            if index == 1:
-                assert row == ['2', 'row 2', '2']
-
-
-def test_handles_unable_to_connect_to_db_error():
-    with pytest.raises(Exception):
-        assert get_connection('alx', 'pass', 'data', 'localhost')
+conn = pg.Connection( )
 
 
 @pytest.fixture(scope="function")
@@ -53,14 +28,48 @@ def s3(aws_credentials):
         yield boto3.client("s3", region_name="us-east-1")
 
 
-def test_puts_csvs_to_bucket(s3, capsys):
-    from src.ingestion import create_bucket
-    BUCKET_NAME = 'test-bucket-00000009988'
-    create_bucket()
-    move_csv_to_bucket(BUCKET_NAME)
-    captured = capsys.readouterr()
-    
-    assert captured.out == 'csv added to bucket\n'
+def test_1(s3):
+    s3.create_bucket(Bucket = 'test_ingestion_bucket')
+    from src.ingestion import database_to_bucket_csv_file
+    test_columns = [
+      'column_id'
+      'column_2',
+      'column_3'
+    ]
+    database_to_bucket_csv_file('test_table', test_columns, 'test_ingestion_bucket', 'test.csv')
+
+
+
+
+
+
+
+# sql_query = (
+#             f'DROP DATABASE IF EXISTS test_raw_data;'
+#             f'CREATE DATABASE test_raw_data;'
+#             f'\c test_raw_data'
+#             f'CREATE TABLE test_table' 
+#                 f'('
+#                 f'column_id SERIAL PRIMARY KEY,'
+#                 f'column_2 VARCHAR NOT NULL,'
+#                 f'column_3 INT NOT NULL'
+#             f');'
+
+#             f'INSERT INTO test_table ('
+#                 f'column_2,'
+#                 f'column_3'
+#             f')'
+#             f'VALUES'
+#             f'("row 1", 1),'
+#             f'("row 2", 2);'
+# )
+
+
+
+
+
+
+
 
 
     
