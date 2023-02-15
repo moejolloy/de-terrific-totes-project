@@ -91,3 +91,74 @@ def test_logging_other_errors(caplog):
         with pytest.raises(RuntimeError):
             src.utils.load_csv_from_s3('Test', 'Test')
         assert caplog.records[0].levelno == logging.CRITICAL
+
+
+def test_export_parquet_to_s3_FileNotFoundError_handled():
+    with patch('src.utils.pd.DataFrame.to_parquet') as mock:
+        response_error = FileNotFoundError
+        mock.side_effect = response_error
+        with pytest.raises(FileNotFoundError):
+            src.utils.export_parquet_to_s3(pd.DataFrame, '', '')
+
+
+def test_export_parquet_to_s3_ValueError_handled():
+    with patch('src.utils.pd.DataFrame.to_parquet') as mock:
+        response_error = ValueError
+        mock.side_effect = response_error
+        with pytest.raises(ValueError):
+            src.utils.export_parquet_to_s3(pd.DataFrame, '', '')
+
+
+def test_export_parquet_to_s3_AttributeError_handled():
+    with patch('src.utils.pd.DataFrame.to_parquet') as mock:
+        response_error = AttributeError
+        mock.side_effect = response_error
+        with pytest.raises(AttributeError):
+            src.utils.export_parquet_to_s3(pd.DataFrame, '', '')
+
+
+def test_export_parquet_to_s3_other_errors_handled():
+    with patch('src.utils.pd.DataFrame.to_parquet') as mock:
+        response_error = Exception
+        mock.side_effect = response_error
+        with pytest.raises(RuntimeError):
+            src.utils.export_parquet_to_s3(pd.DataFrame, '', '')
+
+
+def test_logging_FileNotFoundError(caplog):
+    with patch('src.utils.pd.DataFrame.to_parquet') as mock:
+        response_error = FileNotFoundError
+        mock.side_effect = response_error
+        with pytest.raises(FileNotFoundError):
+            src.utils.export_parquet_to_s3(pd.DataFrame, '', '')
+        assert caplog.records[0].levelno == logging.CRITICAL
+        assert caplog.records[0].msg == "Bucket not found."
+
+
+def test_logging_ValueError(caplog):
+    with patch('src.utils.pd.DataFrame.to_parquet') as mock:
+        response_error = ValueError
+        mock.side_effect = response_error
+        with pytest.raises(ValueError):
+            src.utils.export_parquet_to_s3(pd.DataFrame, '', '')
+        assert caplog.records[0].levelno == logging.CRITICAL
+        assert caplog.records[0].msg == "Key not of correct format."
+
+
+def test_logging_AttributeError(caplog):
+    with patch('src.utils.pd.DataFrame.to_parquet') as mock:
+        response_error = AttributeError
+        mock.side_effect = response_error
+        with pytest.raises(AttributeError):
+            src.utils.export_parquet_to_s3(pd.DataFrame, '', '')
+        assert caplog.records[0].levelno == logging.CRITICAL
+        assert caplog.records[0].msg == "Object passed to the function is not of type DataFrame."
+
+
+def test_logging_other_errors(caplog):
+    with patch('src.utils.pd.DataFrame.to_parquet') as mock:
+        response_error = RuntimeError
+        mock.side_effect = response_error
+        with pytest.raises(RuntimeError):
+            src.utils.export_parquet_to_s3(pd.DataFrame, '', '')
+        assert caplog.records[0].levelno == logging.CRITICAL
