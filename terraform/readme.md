@@ -8,4 +8,6 @@ Processed Lambda has permission to read only from ingest bucket
 Processed Lambda has permission to read and write to processed bucket
 Populate Lambda has permission to read only from processed bucket
 
+all lambda function names should refer to their appropriate variable in the vars.tf file.
+
 Each have their own roles
