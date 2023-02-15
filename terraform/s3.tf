@@ -14,5 +14,5 @@ resource "aws_s3_bucket_notification" "dummy_lambda_bucket_notification" {
     events              = ["s3:ObjectCreated:*"]
   }
 
-  depends_on = [aws_lambda_permission.allow_s3]
+  depends_on = [aws_lambda_permission.allow_s3_dummy_file_reader]
 }
