@@ -15,7 +15,6 @@ s3 = boto3.client('s3')
 
 def load_from_s3(bucket, key):
     try:
-
         s3_response_object = s3.get_object(
             Bucket=bucket, Key=key)
         df = s3_response_object['Body'].read()
