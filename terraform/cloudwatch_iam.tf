@@ -79,7 +79,7 @@ data "aws_iam_policy_document" "population_lambda_cloudwatch_policy_document" {
 }
 
 resource "aws_iam_policy" "dummy_lambda_cloudwatch_policy" {
-  name_prefix = "cw-policy-${dummy_lambda_name}"
+  name_prefix = "cw-policy-${var.dummy_lambda_name}"
   policy      = data.aws_iam_policy_document.dummy_lambda_cloudwatch_policy_document.json
 }
 
