@@ -10,12 +10,11 @@ from pandas import Series, DataFrame
 import csv
 
 
-HOST = (f'nc-data-eng-totesys-production.chpsczt8h1nu.'
-        f'eu-west-2.rds.amazonaws.com')
-PORT = 5432
-USER = 'project_user_4'
-PASS = 'ZUr7UMAkA3mPQgrQ2jckFDfa'
-DATABASE = 'totesys'
+HOST = ''
+PORT = ''
+USER = ''
+PASS = ''
+DATABASE = ''
 
 s3_resource = boto3.resource('s3')
 
@@ -33,7 +32,7 @@ def get_connection(user, password, database, host, port=5432):
         logger.error('Unable to connect to database')
         raise Exception('Unable to connect to database')
 
-conn = get_connection(USER, PASS, DATABASE, HOST, PORT)
+# conn = get_connection(USER, PASS, DATABASE, HOST, PORT)
 
 staff_columns = [
                 'staff_id', 
@@ -92,7 +91,7 @@ sales_order_columns = [
                 ]
 
 counterparty_columns = [
-                'counterparty_id'
+                'counterparty_id',
                 'counterparty_legal_name', 
                 'legal_address_id', 
                 'commercial_contact', 
@@ -155,14 +154,13 @@ purchase_order_columns = [
     'agreed_delivery_location_id'
 ]
 
-
-
-
-
-
+def pull_from_database(table_name):
+    myresult = conn.run(f'SELECT * FROM {table_name};')
+    return myresult
 
 def database_to_bucket_csv_file(table_name, column_headers, bucket_name, bucket_key):
-    myresult = conn.run(f'SELECT * FROM {table_name};')
+    myresult = pull_from_database(table_name)
+    print(myresult)
     item_list = []
     for i in myresult:
         item = {}
@@ -173,16 +171,17 @@ def database_to_bucket_csv_file(table_name, column_headers, bucket_name, bucket_
     csv_buffer = StringIO()
     df.to_csv(csv_buffer)
     s3_resource.Object(bucket_name, bucket_key).put(Body=csv_buffer.getvalue())
+    return item_list
 
-
-database_to_bucket_csv_file('staff', staff_columns, 'pandas-351803', 'staff.csv')
-database_to_bucket_csv_file('transaction', transaction_columns, 'pandas-351803', 'transaction.csv')
-database_to_bucket_csv_file('design', design_columns, 'pandas-351803', 'design.csv')
-database_to_bucket_csv_file('address', address_columns, 'pandas-351803', 'address.csv')
-database_to_bucket_csv_file('sales_order', sales_order_columns, 'pandas-351803', 'sales_orders.csv')
-database_to_bucket_csv_file('counterparty', counterparty_columns, 'pandas-351803', 'counterparty.csv')
-database_to_bucket_csv_file('payment', payment_columns, 'pandas-351803', 'payment.csv')
-database_to_bucket_csv_file('payment_type', payment_type_columns, 'pandas-351803', 'payment_type.csv')
-database_to_bucket_csv_file('currency', currency_columns, 'pandas-351803', 'currency.csv')
-database_to_bucket_csv_file('department', department_columns, 'pandas-351803', 'department.csv')
-database_to_bucket_csv_file('purchase_order', purchase_order_columns, 'pandas-351803', 'purchase_order.csv')
+if __name__ == "__main__":
+    database_to_bucket_csv_file('staff', staff_columns, 'pandas-351803', 'staff.csv')
+    database_to_bucket_csv_file('transaction', transaction_columns, 'pandas-351803', 'transaction.csv')
+    database_to_bucket_csv_file('design', design_columns, 'pandas-351803', 'design.csv')
+    database_to_bucket_csv_file('address', address_columns, 'pandas-351803', 'address.csv')
+    database_to_bucket_csv_file('sales_order', sales_order_columns, 'pandas-351803', 'sales_orders.csv')
+    database_to_bucket_csv_file('counterparty', counterparty_columns, 'pandas-351803', 'counterparty.csv')
+    database_to_bucket_csv_file('payment', payment_columns, 'pandas-351803', 'payment.csv')
+    database_to_bucket_csv_file('payment_type', payment_type_columns, 'pandas-351803', 'payment_type.csv')
+    database_to_bucket_csv_file('currency', currency_columns, 'pandas-351803', 'currency.csv')
+    database_to_bucket_csv_file('department', department_columns, 'pandas-351803', 'department.csv')
+    database_to_bucket_csv_file('purchase_order', purchase_order_columns, 'pandas-351803', 'purchase_order.csv')

@@ -1,4 +1,3 @@
-from src.ingestion import get_connection, database_to_bucket_csv_file
 import boto3
 from moto import mock_s3
 from unittest.mock import patch
@@ -6,10 +5,8 @@ import pytest
 import os
 import csv
 import pg8000.native as pg
-import testing.postgresql
-from sqlalchemy import create_engine
-
-conn = pg.Connection( )
+# import testing.postgresql
+# from sqlalchemy import create_engine
 
 
 @pytest.fixture(scope="function")
@@ -28,19 +25,58 @@ def s3(aws_credentials):
         yield boto3.client("s3", region_name="us-east-1")
 
 
-def test_1(s3):
+def test_check_returns_correct_format(s3):
+    import src.ingestion
+
     s3.create_bucket(Bucket = 'test_ingestion_bucket')
-    from src.ingestion import database_to_bucket_csv_file
-    test_columns = [
-      'column_id'
-      'column_2',
-      'column_3'
-    ]
-    database_to_bucket_csv_file('test_table', test_columns, 'test_ingestion_bucket', 'test.csv')
+    with patch('src.ingestion.pull_from_database', return_value = [[1, 'row_1', 1], [2, 'row_2', 2]]):
+        test_columns = [
+            'column_id',
+            'column_2',
+            'column_3'
+        ]
+        result = src.ingestion.database_to_bucket_csv_file('test_table', test_columns, 'test_ingestion_bucket', 'test.csv')
+        assert result == [{'column_id': 1, 'column_2': 'row_1', 'column_3': 1}, {'column_id': 2, 'column_2': 'row_2', 'column_3': 2}]
 
 
+def test_check_file_exists_in_bucket(s3):
+    import src.ingestion
 
 
+    BUCKET_NAME = 'test_ingestion_bucket'
+
+    s3.create_bucket(Bucket = BUCKET_NAME)
+    with patch('src.ingestion.pull_from_database', return_value = [[1, 'row_1', 1], [2, 'row_2', 2]]):
+        test_columns = [
+            'column_id',
+            'column_2',
+            'column_3'
+        ]
+        src.ingestion.database_to_bucket_csv_file('test_table', test_columns, BUCKET_NAME, 'test.csv')
+    
+    obj_list = s3.list_objects_v2(Bucket = BUCKET_NAME)
+    obj_list['Contents']
+    bucket_object_list=[item['Key'] for item in obj_list['Contents']]
+    assert bucket_object_list == ['test.csv']
+
+
+def test_check_file_in_bucket_has_correct_data(s3):
+    import src.ingestion
+
+
+    BUCKET_NAME = 'test_ingestion_bucket'
+
+    s3.create_bucket(Bucket = BUCKET_NAME)
+    with patch('src.ingestion.pull_from_database', return_value = [[1, 'row_1', 1], [2, 'row_2', 2]]):
+        test_columns = [
+            'column_id',
+            'column_2',
+            'column_3'
+        ]
+        src.ingestion.database_to_bucket_csv_file('test_table', test_columns, BUCKET_NAME, 'test.csv')
+
+    data = s3.get_object(Bucket=BUCKET_NAME, Key='test.csv')['Body'].read()
+    assert data == b',column_id,column_2,column_3\n0,1,row_1,1\n1,2,row_2,2\n'
 
 
 

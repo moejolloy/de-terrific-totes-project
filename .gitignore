@@ -11,5 +11,8 @@ crash.log
 # venv
 venv/
 
+# credentials
+db-credentials.txt
+
 
 
