@@ -1,9 +1,9 @@
 resource "aws_s3_bucket" "ingest-bucket" {
-  bucket = "ingest-bucket-totedd-1402"
+  bucket_prefix = "ingest-bucket-totedd-1402"
 }
 
 resource "aws_s3_bucket" "processed-bucket" {
-  bucket = "processed-bucket-totedd-1402"
+  bucket_prefix = "processed-bucket-totedd-1403"
 }
 
 resource "aws_s3_bucket_notification" "dummy_lambda_bucket_notification" {
@@ -14,5 +14,5 @@ resource "aws_s3_bucket_notification" "dummy_lambda_bucket_notification" {
     events              = ["s3:ObjectCreated:*"]
   }
 
-  depends_on = [aws_lambda_permission.allow_s3]
+  depends_on = [aws_lambda_permission.allow_s3_dummy_file_reader]
 }

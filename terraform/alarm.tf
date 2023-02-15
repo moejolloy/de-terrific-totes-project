@@ -20,7 +20,18 @@ resource "aws_cloudwatch_metric_alarm" "alert_errors" {
   namespace           = "invalid-file-type"
   threshold           = "1"
   statistic           = "SampleCount"
-  alarm_actions       = ["arn:aws:sns:us-east-1:206923297952:test-error-alerts"]
-# alarm actions may need to send an email, or some other way of alerting us to the alarm
-
+  alarm_actions       = ["arn:aws:sns:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:dummy-reader-topic"]
+  # alarm actions may need to send an email, or some other way of alerting us to the alarm
 }
+
+resource "aws_sns_topic" "dummy-reader-topic" {
+  name = "dummy-reader-topic"
+}
+
+resource "aws_sns_topic_subscription" "dummy-reader-topic-subscription" {
+  topic_arn = aws_sns_topic.dummy-reader-topic.arn
+  protocol  = "email"
+  endpoint  = "terrifictotedd@gmail.com"
+}
+
+

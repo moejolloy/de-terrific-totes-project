@@ -51,7 +51,8 @@ def lambda_handler(event, context):
     except UnicodeError:
         logger.error(f'File {s3_object_name} is not a valid text file')
     except InvalidFileTypeError:
-        logger.error(f'File {s3_object_name} is not a valid text file')
+        logger.error(
+            f'InvalidFileTypeError {s3_object_name} is not a valid text file')
     except Exception as e:
         logger.error(e)
         raise RuntimeError
