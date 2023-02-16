@@ -44,10 +44,10 @@ def test_function_returns_correct_format_for_df(s3, s3_bucket):
 
 
     result = src.ingestion.data_to_bucket_csv_file(
-                                                        TABLE_NAME, 
-                                                        TABLE_COLUMNS, 
-                                                        BUCKET_NAME, 
-                                                        BUCKET_KEY)
+                                                    TABLE_NAME, 
+                                                    TABLE_COLUMNS, 
+                                                    BUCKET_NAME, 
+                                                    BUCKET_KEY)
     assert result == [
             {'column_id': 1, 'column_2': 'row_1', 'column_3': 1}, 
             {'column_id': 2, 'column_2': 'row_2', 'column_3': 2}]
@@ -85,34 +85,10 @@ def test_file_in_bucket_has_correct_data(s3, s3_bucket):
     assert data == b',column_id,column_2,column_3\n0,1,row_1,1\n1,2,row_2,2\n'
 
 
-
-# sql_query = (
-#             f'DROP DATABASE IF EXISTS test_raw_data;'
-#             f'CREATE DATABASE test_raw_data;'
-#             f'\c test_raw_data'
-#             f'CREATE TABLE test_table' 
-#                 f'('
-#                 f'column_id SERIAL PRIMARY KEY,'
-#                 f'column_2 VARCHAR NOT NULL,'
-#                 f'column_3 INT NOT NULL'
-#             f');'
-
-#             f'INSERT INTO test_table ('
-#                 f'column_2,'
-#                 f'column_3'
-#             f')'
-#             f'VALUES'
-#             f'("row 1", 1),'
-#             f'("row 2", 2);'
-# )
-
-
-
-
-
-
-
-
-
+# Test Helpers
+def test_get_keys_from_table_names_applies_correct_suffix():
+    from src.ingestion import get_keys_from_table_names
     
-
+    
+    result = get_keys_from_table_names(['table_1', 'table_2', 'table_3'])
+    assert result == ['table_1.csv', 'table_2.csv', 'table_3.csv']

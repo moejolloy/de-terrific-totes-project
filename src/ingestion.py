@@ -1,11 +1,11 @@
+"""Uploads database table data to separate 'csv' files on S3."""
 import logging
 import pg8000.native as pg
 import pg8000.exceptions as pge
 import boto3
-# from botocore.exceptions import ClientError
-from io import StringIO
 import pandas as pd
-# import csv
+from io import StringIO
+
 
 HOST = ''
 PORT = ''
@@ -20,6 +20,18 @@ s3_resource = boto3.resource('s3')
 
 
 def get_connection(user, password, database, host, port):
+    """ Creates a connection to a PostgreSQL database.
+    Args:
+        user: The username to connect to the PostgreSQL server with.
+        password: The user password to connect to the server with.
+        database: The name of the database instance to connect with.
+        host: The hostname of the PostgreSQL server to connect with.
+        port: The TCP/IP port of the PostgreSQL server instance.
+    Returns:
+        None
+    Raises:
+        DatabaseError
+    """
     try:
         conn = pg.Connection(
                             user, 
@@ -30,138 +42,68 @@ def get_connection(user, password, database, host, port):
                         )
         return conn
     except pge.DatabaseError:
-        logger.critical('Unable to connect to database')
-        raise pge.DatabaseError('Unable to connect to database')
+        logger.error('Unable to connect to database')
+        raise pge.DatabaseError()
 
-# conn = get_connection(USER, PASS, DATABASE, HOST, PORT)
 
-staff_columns = [
-                'staff_id', 
-                'first_name', 
-                'last_name', 
-                'department_id', 
-                'email_address', 
-                'created_at', 
-                'last_updated'
-                ]
+conn = get_connection(USER, PASS, DATABASE, HOST, PORT)
 
-transaction_columns = [
-                        'transaction_id', 
-                        'transaction_type', 
-                        'sales_order_id', 
-                        'purchase_order_id', 
-                        'created_at', 
-                        'last_updated', 
-                        ]
+tables_list = ['staff', 'transaction', 'design', 'address', 'sales_order', 'counterparty', 'payment', 'payment_type', 'currency', 'department', 'purchase_order']
+bucket_name = 'insert-bucket-name-here'
 
-design_columns = [
-                'design_id', 
-                'created_at', 
-                'last_updated', 
-                'design_name', 
-                'file_location', 
-                'file_name'
-                ]
+def get_keys_from_table_names(tables):
+    """ Appends '.csv' to items in list.
+    Args:
+        tables: A list of table names.
+    Returns:
+        A list of table names with appended file extension.
+    Raises:
+    """
+    keys_list = []
+    for table_name in tables:
+        keys_list.append(f'{table_name}.csv')
+    return keys_list
 
-address_columns = [
-                'address_id', 
-                'address_line_1', 
-                'address_line_2', 
-                'district', 
-                'city', 
-                'postal_code', 
-                'country', 
-                'phone', 
-                'created_at', 
-                'last_updated'
-                ]
 
-sales_order_columns = [
-                'sales_order_id', 
-                'created_at', 
-                'last_updated', 
-                'design_id', 
-                'staff_id',
-                'counterparty_id', 
-                'units_sold', 
-                'unit_price', 
-                'currency_id', 
-                'agreed_delivery_date', 
-                'agreed_payment_date', 
-                'agreed_delivery_location_id'
-                ]
-
-counterparty_columns = [
-                'counterparty_id',
-                'counterparty_legal_name', 
-                'legal_address_id', 
-                'commercial_contact', 
-                'delivery_contact', 
-                'created_at',  
-                'last_updated'
-                ]
-
-payment_columns = [
-    'payment_id',
-    'created_at',
-    'last_updated',
-    'transaction_id',
-    'counterparty_id',
-    'payment_amount',
-    'currency_id',
-    'payment_type_id',
-    'paid',
-    'payment_date',
-    'company_ac_number',
-    'counterparty_ac_number'
-]
-
-payment_type_columns = [
-    'payment_type_id',
-    'payment_type_name',
-    'created-at',
-    'last_updated'
-
-]
-
-currency_columns = [
-    'currency_id',
-    'currency_code',
-    'created_at',
-    'last_updated'
-]
-
-department_columns = [
-    'departmemt_id',
-    'department_name',
-    'location',
-    'manager',
-    'created-at',
-    'last_updated'
-]
-
-purchase_order_columns = [
-    'purchase_order_id',
-    'created_at',
-    'last_updated',
-    'staff_id',
-    'counterparty_id',
-    'item_code',
-    'item_quantity',
-    'item_unit_price',
-    'currency_id',
-    'agreed_delivery_date'
-    'agreed_payment_date',
-    'agreed_delivery_location_id'
-]
+def sql_get_column_headers(tables):
+    """ Queries database find column headers for a list of tables.
+    Args:
+        tables: A list of table names.
+    Returns:
+        A collection of nested lists containing table headers.
+    Raises:
+    """
+    table_headers_list = []
+    for table in tables:
+        conn.run(f'SELECT * FROM {table};')
+        table_headers_list.append([column['name'] for column in conn.columns])
+    return table_headers_list
 
 
 def sql_get_all_data(table_name):
+    """ Queries database to select all data from a table.
+    Args:
+        table_name: The name of the table to get data from. 
+    Returns:
+        A collection of nested lists of row data
+    Raises:
+    """
     table_data = conn.run(f'SELECT * FROM {table_name};')
     return table_data
 
 
 def data_to_bucket_csv_file(table_name, column_headers, bucket_name, bucket_key):
+    """ Takes data collected from 'sql_get_all_data' function 
+        and uploads it to S3 as a csv file.
+    Args:
+        table_name: The name of the table to get data from.
+        column_headers: A collection of nested lists containing table headers.
+        bucket_name: The name of the bucket in S3.
+        bucket_key: The name of the file and path the data will be stored in.
+    Returns:
+        Formated data as a list of dictionaries.
+    Raises:
+    """
     data_from_table = sql_get_all_data(table_name)
     rows_list = []
     for row in data_from_table:
@@ -176,19 +118,17 @@ def data_to_bucket_csv_file(table_name, column_headers, bucket_name, bucket_key)
     return rows_list
 
 
-def run_data_ingestion():
-    data_to_bucket_csv_file('staff', staff_columns, 'pandas-351803', 'staff.csv')
-    data_to_bucket_csv_file('transaction', transaction_columns, 'pandas-351803', 'transaction.csv')
-    data_to_bucket_csv_file('design', design_columns, 'pandas-351803', 'design.csv')
-    data_to_bucket_csv_file('address', address_columns, 'pandas-351803', 'address.csv')
-    data_to_bucket_csv_file('sales_order', sales_order_columns, 'pandas-351803', 'sales_orders.csv')
-    data_to_bucket_csv_file('counterparty', counterparty_columns, 'pandas-351803', 'counterparty.csv')
-    data_to_bucket_csv_file('payment', payment_columns, 'pandas-351803', 'payment.csv')
-    data_to_bucket_csv_file('payment_type', payment_type_columns, 'pandas-351803', 'payment_type.csv')
-    data_to_bucket_csv_file('currency', currency_columns, 'pandas-351803', 'currency.csv')
-    data_to_bucket_csv_file('department', department_columns, 'pandas-351803', 'department.csv')
-    data_to_bucket_csv_file('purchase_order', purchase_order_columns, 'pandas-351803', 'purchase_order.csv')
+def run_ingestion(event, context):
+    """ Runs functions required to upload all table data to S3
+    Returns:
+        None
+    Raises:
+    """
+    columns = sql_get_column_headers(tables_list)
+    bucket_key = get_keys_from_table_names(tables_list)
+    for index, table in enumerate(tables_list):
+        data_to_bucket_csv_file(table, columns[index], bucket_name, bucket_key[index])
 
 
-if __name__ == "__main__":
-    run_data_ingestion()
+# if __name__ == "__main__":
+#     run_ingestion({}, {})
