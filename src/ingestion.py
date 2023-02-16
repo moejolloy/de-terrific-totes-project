@@ -3,7 +3,7 @@ import logging
 import pg8000.native as pg
 import pg8000.exceptions as pge
 import boto3
-from botocore.exceptions import ClientError
+import botocore.exceptions as be
 import pandas as pd
 from io import StringIO
 import json
@@ -31,24 +31,14 @@ def get_secret_value(secret_id: str) -> dict:
         secrets_dict = json.loads(secret_value["SecretString"])
         return(secrets_dict)
     except secrets.exceptions.ResourceNotFoundException as e:
-        logger.critical("The requested secret " + secret_id + " was not found")
+        logger.critical(f'The requested secret {secret_id} was not found')
         raise e
-    #except secrets.exceptions.In
-    except ClientError as e:
-        if e.response['Error']['Code'] == 'InvalidRequestException':
-            print("The request was invalid due to:", e)
-        elif e.response['Error']['Code'] == 'InvalidParameterException':
-            print("The request had invalid params:", e)
-        elif e.response['Error']['Code'] == 'InternalServiceError':
-            print("An error occurred on service side:", e)
-
-
-# HOST = (f'nc-data-eng-totesys-production.chpsczt8h1nu.'
-#         f'eu-west-2.rds.amazonaws.com')
-# PORT = 5432
-# USER = get_secret_value('INSERT SECRET ID HERE')['username']
-# PASS = get_secret_value('INSERT SECRET ID HERE')['password']
-# DATABASE = 'totesys'
+    except be.ParamValidationError as e:
+        logger.critical('The request has invalid params')
+        raise e
+    except Exception as e:
+        logger.critical(e)
+        raise RuntimeError
 
 
 def get_connection(user, password, database, host, port):
@@ -76,12 +66,10 @@ def get_connection(user, password, database, host, port):
     except pge.DatabaseError:
         logger.critical('DatabaseError: Unable to connect to database')
         raise pge.DatabaseError('DatabaseError: Unable to connect to database')
+    except Exception as e:
+        logger.critial(e)
+        raise RuntimeError
 
-
-# conn = get_connection(USER, PASS, DATABASE, HOST, PORT)
-
-tables_list = ['staff', 'transaction', 'design', 'address', 'sales_order', 'counterparty', 'payment', 'payment_type', 'currency', 'department', 'purchase_order']
-bucket_name = 'insert-bucket-name-here'
 
 def get_keys_from_table_names(tables):
     """ Appends '.csv' to items in list.
@@ -97,7 +85,7 @@ def get_keys_from_table_names(tables):
     return keys_list
 
 
-def sql_get_column_headers(tables):
+def sql_get_column_headers(conn, tables):
     """ Queries database find column headers for a list of tables.
     Args:
         tables: A list of table names.
@@ -112,7 +100,7 @@ def sql_get_column_headers(tables):
     return table_headers_list
 
 
-def sql_get_all_data(table_name):
+def sql_get_all_data(conn, table_name):
     """ Queries database to select all data from a table.
     Args:
         table_name: The name of the table to get data from. 
@@ -124,7 +112,7 @@ def sql_get_all_data(table_name):
     return table_data
 
 
-def data_to_bucket_csv_file(table_name, column_headers, bucket_name, bucket_key):
+def data_to_bucket_csv_file(conn, table_name, column_headers, bucket_name, bucket_key):
     """ Takes data collected from 'sql_get_all_data' function 
         and uploads it to S3 as a csv file.
     Args:
@@ -136,18 +124,22 @@ def data_to_bucket_csv_file(table_name, column_headers, bucket_name, bucket_key)
         Formated data as a list of dictionaries.
     Raises:
     """
-    data_from_table = sql_get_all_data(table_name)
-    rows_list = []
-    for row in data_from_table:
-        row_data_dict = {}
-        for index, column in enumerate(column_headers):
-            row_data_dict[column] = row[index]
-        rows_list.append(row_data_dict)
-    df = pd.DataFrame(data = rows_list, columns = column_headers)
-    csv_buffer = StringIO()
-    df.to_csv(csv_buffer)
-    s3_resource.Object(bucket_name, bucket_key).put(Body = csv_buffer.getvalue())
-    return rows_list
+    try:
+        data_from_table = sql_get_all_data(conn, table_name)
+        rows_list = []
+        for row in data_from_table:
+            row_data_dict = {}
+            for index, column in enumerate(column_headers):
+                row_data_dict[column] = row[index]
+            rows_list.append(row_data_dict)
+        df = pd.DataFrame(data = rows_list, columns = column_headers)
+        csv_buffer = StringIO()
+        df.to_csv(csv_buffer)
+        s3_resource.Object(bucket_name, bucket_key).put(Body = csv_buffer.getvalue())
+        return rows_list
+    except Exception as e:
+        logger.critical(e)
+        raise RuntimeError
 
 
 def lambda_handler(event, context):
@@ -156,11 +148,30 @@ def lambda_handler(event, context):
         None
     Raises:
     """
-    columns = sql_get_column_headers(tables_list)
-    bucket_key = get_keys_from_table_names(tables_list)
-    for index, table in enumerate(tables_list):
-        data_to_bucket_csv_file(table, columns[index], bucket_name, bucket_key[index])
+    HOST = (f'nc-data-eng-totesys-production.chpsczt8h1nu.'
+        f'eu-west-2.rds.amazonaws.com')
+    PORT = 5432
+    USER = get_secret_value('topsecret')['username'] # INSERT SECRET NAME HERE
+    PASS = get_secret_value('topsecret')['password'] # INSERT SECRET NAME HERE
+    DATABASE = 'totesys'
+    tables_list = ['staff', 'transaction', 'design', 'address', 
+                    'sales_order', 'counterparty', 'payment', 
+                    'payment_type', 'currency', 'department', 
+                    'purchase_order']
+    bucket_name = 'connectionbucketname99' # INSERT BUCKET NAME HERE
+    
+    conn = get_connection(USER, PASS, DATABASE, HOST, PORT)
+    try:
+        columns = sql_get_column_headers(conn, tables_list)
+        bucket_key = get_keys_from_table_names(tables_list)
+        for index, table in enumerate(tables_list):
+            data_to_bucket_csv_file(conn, table, columns[index], 
+                                    bucket_name, bucket_key[index])
+        logger.info('SUCCESSFUL INGESTION')
+    except Exception as e:
+        logger.critical(e)
+        raise RuntimeError
 
 
-# if __name__ == "__main__":
-#     lambda_handler({}, {})
+if __name__ == "__main__":
+    lambda_handler({}, {})

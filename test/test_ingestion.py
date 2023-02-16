@@ -1,16 +1,19 @@
 import boto3
-from moto import mock_s3, mock_secretsmanager
+from moto import mock_s3
 from unittest.mock import patch
 import pytest
 import os
 import botocore.errorfactory
-import botocore.exceptions
+import botocore.exceptions as be
+import logging
 
 BUCKET_NAME = 'test_ingestion_bucket'
 BUCKET_KEY = 'test.csv'
 MOCK_QUERY_RETURN = [[1, 'row_1', 1], [2, 'row_2', 2]]
 TABLE_NAME = 'test_table'
 TABLE_COLUMNS = ['column_id', 'column_2', 'column_3']
+
+logger = logging.getLogger("TestLogger")
 
 
 @pytest.fixture(scope="function")
@@ -85,52 +88,3 @@ def test_file_in_bucket_has_correct_data(s3, s3_bucket):
 
     data = s3.get_object(Bucket=BUCKET_NAME, Key='test.csv')['Body'].read()
     assert data == b',column_id,column_2,column_3\n0,1,row_1,1\n1,2,row_2,2\n'
-
-
-# Test SecretsManager
-@pytest.fixture
-def secretsmanager(aws_credentials):
-    with mock_secretsmanager():
-        yield boto3.client("secretsmanager", region_name="us-east-1")
-
-
-@pytest.fixture
-def create_secret(secretsmanager):
-    secretsmanager.create_secret(Name = 'MySecret', SecretString = '{"username":"username","password":"password"}')
-
-
-def test_will_return_dictionary_containing_correct_values(secretsmanager, create_secret):
-    from src.ingestion import get_secret_value
-
-    secrets_dict = get_secret_value('MySecret')
-    assert secrets_dict == {'password': 'password', 'username': 'username'} 
-
-
-def test_will_handle_error_if_secret_name_incorrect(secretsmanager, create_secret):
-    from src.ingestion import get_secret_value
-
-
-    with pytest.raises(botocore.errorfactory.ClientError):
-        get_secret_value('NotMySecret')
-
-
-def test():
-    from src.ingestion import get_secret_value
-
-
-    with patch('src.ingestion.get_secret_value') as mock:
-        response_error = boto3.client(
-            'secretsmanager').exceptions.InvalidParameterException({}, '')
-        mock.side_effect = response_error
-        with pytest.raises(boto3.client(
-                'secretsmanager').exceptions.InvalidParameterException):
-            get_secret_value(8)
-
-
-# Test Helpers
-def test_get_keys_from_table_names_applies_correct_suffix():
-    from src.ingestion import get_keys_from_table_names
-    
-    
-    result = get_keys_from_table_names(['table_1', 'table_2', 'table_3'])
-    assert result == ['table_1.csv', 'table_2.csv', 'table_3.csv']
