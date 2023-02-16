@@ -4,6 +4,7 @@ import pg8000.native as pg
 import pg8000.exceptions as pge
 import boto3
 import botocore.exceptions as be
+from botocore.errorfactory import ClientError
 import pandas as pd
 from io import StringIO
 import json
@@ -168,6 +169,7 @@ def lambda_handler(event, context):
             data_to_bucket_csv_file(conn, table, columns[index], 
                                     bucket_name, bucket_key[index])
         logger.info('SUCCESSFUL INGESTION')
+        print('SUCCESSFUL INGESTION')
     except Exception as e:
         logger.critical(e)
         raise RuntimeError
