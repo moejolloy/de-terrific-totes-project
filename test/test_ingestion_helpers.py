@@ -74,10 +74,18 @@ def test_logging_all_other_errors(caplog):
         assert caplog.records[0].levelno == logging.CRITICAL
 
 
-# Test Helpers
+# Test SQL Helpers
 def test_get_keys_from_table_names_applies_correct_suffix():
     from src.ingestion import get_keys_from_table_names
     
     
     result = get_keys_from_table_names(['table_1', 'table_2', 'table_3'])
     assert result == ['table_1.csv', 'table_2.csv', 'table_3.csv']
+
+
+def test_mock_connection():
+    import src.ingestion
+
+    with patch('src.ingestion.conn.run') as mock:
+        mock.return_value = []
+    assert src.ingestion.sql_get_column_headers(['column_1', 'column_2']) == []

@@ -13,8 +13,6 @@ MOCK_QUERY_RETURN = [[1, 'row_1', 1], [2, 'row_2', 2]]
 TABLE_NAME = 'test_table'
 TABLE_COLUMNS = ['column_id', 'column_2', 'column_3']
 
-logger = logging.getLogger("TestLogger")
-
 
 @pytest.fixture(scope="function")
 def aws_credentials():
@@ -88,11 +86,3 @@ def test_file_in_bucket_has_correct_data(s3, s3_bucket):
 
     data = s3.get_object(Bucket=BUCKET_NAME, Key='test.csv')['Body'].read()
     assert data == b',column_id,column_2,column_3\n0,1,row_1,1\n1,2,row_2,2\n'
-
-
-def test_connection():
-    import src.ingestion
-
-    with patch('src.ingestion.conn.run') as mock:
-        mock.return_value = []
-    assert src.ingestion.sql_get_column_headers(['column_1', 'column_2']) == []
