@@ -3,20 +3,52 @@ import logging
 import pg8000.native as pg
 import pg8000.exceptions as pge
 import boto3
+from botocore.exceptions import ClientError
 import pandas as pd
 from io import StringIO
+import json
 
-
-HOST = ''
-PORT = ''
-USER = ''
-PASS = ''
-DATABASE = ''
 
 logger = logging.getLogger("ingestion")
 logger.setLevel(logging.INFO)
 
 s3_resource = boto3.resource('s3')
+secrets = boto3.client('secretsmanager')
+
+
+def get_secret_value(secret_id: str) -> dict:
+    """ Finds data for a specified secret on SecretsManager
+    Args:
+        secret_id: The Secret Name that holds the username and password
+                    for your data base
+    Returns:
+        Dictionary containing data on secret
+    Raises:
+        DatabaseError
+    """
+    try:
+        secret_value = secrets.get_secret_value(SecretId = secret_id)
+        secrets_dict = json.loads(secret_value["SecretString"])
+        return(secrets_dict)
+    except secrets.exceptions.ResourceNotFoundException as e:
+        logger.critical("The requested secret " + secret_id + " was not found")
+        raise e
+    #except secrets.exceptions.In
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'InvalidRequestException':
+            print("The request was invalid due to:", e)
+        elif e.response['Error']['Code'] == 'InvalidParameterException':
+            print("The request had invalid params:", e)
+        elif e.response['Error']['Code'] == 'InternalServiceError':
+            print("An error occurred on service side:", e)
+
+
+# HOST = (f'nc-data-eng-totesys-production.chpsczt8h1nu.'
+#         f'eu-west-2.rds.amazonaws.com')
+# PORT = 5432
+# USER = get_secret_value('INSERT SECRET ID HERE')['username']
+# PASS = get_secret_value('INSERT SECRET ID HERE')['password']
+# DATABASE = 'totesys'
 
 
 def get_connection(user, password, database, host, port):
@@ -42,11 +74,11 @@ def get_connection(user, password, database, host, port):
                         )
         return conn
     except pge.DatabaseError:
-        logger.error('Unable to connect to database')
-        raise pge.DatabaseError()
+        logger.critical('DatabaseError: Unable to connect to database')
+        raise pge.DatabaseError('DatabaseError: Unable to connect to database')
 
 
-conn = get_connection(USER, PASS, DATABASE, HOST, PORT)
+# conn = get_connection(USER, PASS, DATABASE, HOST, PORT)
 
 tables_list = ['staff', 'transaction', 'design', 'address', 'sales_order', 'counterparty', 'payment', 'payment_type', 'currency', 'department', 'purchase_order']
 bucket_name = 'insert-bucket-name-here'
@@ -118,7 +150,7 @@ def data_to_bucket_csv_file(table_name, column_headers, bucket_name, bucket_key)
     return rows_list
 
 
-def run_ingestion(event, context):
+def lambda_handler(event, context):
     """ Runs functions required to upload all table data to S3
     Returns:
         None
@@ -131,4 +163,4 @@ def run_ingestion(event, context):
 
 
 # if __name__ == "__main__":
-#     run_ingestion({}, {})
+#     lambda_handler({}, {})
