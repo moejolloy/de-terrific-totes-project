@@ -4,7 +4,6 @@ import pg8000.native as pg
 import pg8000.exceptions as pge
 import boto3
 import botocore.exceptions as be
-from botocore.errorfactory import ClientError
 import pandas as pd
 from io import StringIO
 import json
@@ -152,14 +151,14 @@ def lambda_handler(event, context):
     HOST = (f'nc-data-eng-totesys-production.chpsczt8h1nu.'
         f'eu-west-2.rds.amazonaws.com')
     PORT = 5432
-    USER = get_secret_value('topsecret')['username'] # INSERT SECRET NAME HERE
-    PASS = get_secret_value('topsecret')['password'] # INSERT SECRET NAME HERE
+    USER = get_secret_value('')['username'] # INSERT SECRET NAME HERE
+    PASS = get_secret_value('')['password'] # INSERT SECRET NAME HERE
     DATABASE = 'totesys'
     tables_list = ['staff', 'transaction', 'design', 'address', 
                     'sales_order', 'counterparty', 'payment', 
                     'payment_type', 'currency', 'department', 
                     'purchase_order']
-    bucket_name = 'connectionbucketname99' # INSERT BUCKET NAME HERE
+    bucket_name = '' # INSERT BUCKET NAME HERE
     
     conn = get_connection(USER, PASS, DATABASE, HOST, PORT)
     try:
@@ -175,5 +174,5 @@ def lambda_handler(event, context):
         raise RuntimeError
 
 
-if __name__ == "__main__":
-    lambda_handler({}, {})
+# if __name__ == "__main__":
+#     lambda_handler({}, {})
