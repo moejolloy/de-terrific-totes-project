@@ -41,34 +41,21 @@ def get_secret_value(secret_id: str) -> dict:
         raise RuntimeError
 
 
-def get_connection(user, password, database, host, port):
-    """ Creates a connection to a PostgreSQL database.
-    Args:
-        user: The username to connect to the PostgreSQL server with.
-        password: The user password to connect to the server with.
-        database: The name of the database instance to connect with.
-        host: The hostname of the PostgreSQL server to connect with.
-        port: The TCP/IP port of the PostgreSQL server instance.
-    Returns:
-        None
-    Raises:
-        DatabaseError
-    """
-    try:
-        conn = pg.Connection(
-                            user, 
-                            host = host, 
-                            port = port , 
-                            password = password, 
-                            database = database
-                        )
-        return conn
-    except pge.DatabaseError:
-        logger.critical('DatabaseError: Unable to connect to database')
-        raise pge.DatabaseError('DatabaseError: Unable to connect to database')
-    except Exception as e:
-        logger.critial(e)
-        raise RuntimeError
+HOST = (f'nc-data-eng-totesys-production.chpsczt8h1nu.'
+        f'eu-west-2.rds.amazonaws.com')
+PORT = 5432
+USER = get_secret_value('topsecret')['username'] # INSERT SECRET NAME HERE
+PASS = get_secret_value('topsecret')['password'] # INSERT SECRET NAME HERE
+DATABASE = 'totesys'
+
+try:
+    conn = pg.Connection('project_user_4', password = PASS, database = DATABASE, host = HOST, port = PORT)
+except pge.DatabaseError:
+    logger.critical('DatabaseError: Unable to connect to database')
+    raise pge.DatabaseError('DatabaseError: Unable to connect to database')
+except Exception as e:
+    logger.critial(e)
+    raise RuntimeError
 
 
 def get_keys_from_table_names(tables):
@@ -85,7 +72,7 @@ def get_keys_from_table_names(tables):
     return keys_list
 
 
-def sql_get_column_headers(conn, tables):
+def sql_get_column_headers(tables):
     """ Queries database find column headers for a list of tables.
     Args:
         tables: A list of table names.
@@ -100,7 +87,7 @@ def sql_get_column_headers(conn, tables):
     return table_headers_list
 
 
-def sql_get_all_data(conn, table_name):
+def sql_get_all_data(table_name):
     """ Queries database to select all data from a table.
     Args:
         table_name: The name of the table to get data from. 
@@ -112,7 +99,7 @@ def sql_get_all_data(conn, table_name):
     return table_data
 
 
-def data_to_bucket_csv_file(conn, table_name, column_headers, bucket_name, bucket_key):
+def data_to_bucket_csv_file(table_name, column_headers, bucket_name, bucket_key):
     """ Takes data collected from 'sql_get_all_data' function 
         and uploads it to S3 as a csv file.
     Args:
@@ -125,7 +112,7 @@ def data_to_bucket_csv_file(conn, table_name, column_headers, bucket_name, bucke
     Raises:
     """
     try:
-        data_from_table = sql_get_all_data(conn, table_name)
+        data_from_table = sql_get_all_data(table_name)
         rows_list = []
         for row in data_from_table:
             row_data_dict = {}
@@ -148,24 +135,17 @@ def lambda_handler(event, context):
         None
     Raises:
     """
-    HOST = (f'nc-data-eng-totesys-production.chpsczt8h1nu.'
-        f'eu-west-2.rds.amazonaws.com')
-    PORT = 5432
-    USER = get_secret_value('')['username'] # INSERT SECRET NAME HERE
-    PASS = get_secret_value('')['password'] # INSERT SECRET NAME HERE
-    DATABASE = 'totesys'
     tables_list = ['staff', 'transaction', 'design', 'address', 
                     'sales_order', 'counterparty', 'payment', 
                     'payment_type', 'currency', 'department', 
                     'purchase_order']
     bucket_name = '' # INSERT BUCKET NAME HERE
     
-    conn = get_connection(USER, PASS, DATABASE, HOST, PORT)
     try:
-        columns = sql_get_column_headers(conn, tables_list)
+        columns = sql_get_column_headers(tables_list)
         bucket_key = get_keys_from_table_names(tables_list)
         for index, table in enumerate(tables_list):
-            data_to_bucket_csv_file(conn, table, columns[index], 
+            data_to_bucket_csv_file(table, columns[index], 
                                     bucket_name, bucket_key[index])
         logger.info('SUCCESSFUL INGESTION')
         print('SUCCESSFUL INGESTION')
