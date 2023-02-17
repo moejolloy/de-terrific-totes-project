@@ -1,4 +1,7 @@
 import boto3
+import logging
+logger = logging.getLogger("processing")
+logger.setLevel(logging.INFO)
 
 
 def transform_data(event, context):
@@ -16,3 +19,7 @@ def transform_data(event, context):
         """
 
     s3 = boto3.client('s3')
+
+
+def tbc(event, context):
+    print("I have a chair")
