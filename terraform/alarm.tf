@@ -20,7 +20,6 @@ resource "aws_cloudwatch_metric_alarm" "alert_errors" {
   threshold           = "1"
   statistic           = "SampleCount"
   alarm_actions       = ["arn:aws:sns:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:dummy-reader-topic"]
-  # alarm actions may need to send an email, or some other way of alerting us to the alarm
 }
 
 resource "aws_sns_topic" "dummy-reader-topic" {
