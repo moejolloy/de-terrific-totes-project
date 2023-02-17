@@ -21,6 +21,8 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout
+        with:
+          ref: Github-actions-31
       - name: Use Python
         uses: actions/setup-python
         with: 
