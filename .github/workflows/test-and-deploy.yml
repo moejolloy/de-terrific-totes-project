@@ -1,0 +1,77 @@
+name: Test and Deploy
+
+on:
+  push:
+    branches: 
+      - Github-actions-31
+  # merge or pullrequest complete, look up:
+  #   branches: 
+  #     - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: string
+        default: dev
+        required: false
+
+jobs:
+  makefile:
+    name: makefile
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout
+      - name: Use Python
+        uses: actions/setup-python
+        with: 
+          python-version: "3.9"
+      - name: Install make
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y make
+      - name: check make is installed
+        run: which make
+      - name: create-environment
+        run: make create-environment
+      - name: Build the environment requirements
+        run: make requirements
+      - name: run dev setup
+        run: make dev-setup
+      - name: run checkups
+        run: make run-checks
+
+  # install-aws-cli:
+  #   name: install aws cli
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: downloade aws cli
+  #       run: curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  #     - name: unzip
+  #       run: unzip awscliv2.zip
+  #     - name: install
+  #       run: sudo ./aws/install --update
+
+  # configure-aws-credentials:
+  #   name: configure aws credentials
+  #   needs: install-aws-cli
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Configure AWS Credentials
+  #       uses: aws-actions/configure-aws-credentials@v1
+  #       with:
+  #         role-to-assume: arn:aws:iam::123456789100:role/my-github-actions-role
+  #         aws-region: us-east-1
+
+  # create-s3-bucket:
+  #   name: create s3 bucket
+  #   needs: configure-aws-credentials
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: connect to aws
+  #       uses: aws-actions/configure-aws-credentials@v1
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         aws-region: ${{ secrets.AWS_REGION }}
+  #     - name: create bucket
+  #       run: aws s3 mb s3://this-is-a-unique-bucket-name-jcsg2504
