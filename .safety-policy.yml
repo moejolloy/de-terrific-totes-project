@@ -1,0 +1,8 @@
+security: 
+    ignore-cvss-severity-below: 0 
+    ignore-cvss-unknown-severity: False 
+    ignore-vulnerabilities: 
+        51457:
+            reason: pytest does not make use of this feature 
+            expires: '2023-03-21'
+    continue-on-vulnerability-error: False 
