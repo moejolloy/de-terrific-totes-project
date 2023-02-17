@@ -34,6 +34,14 @@ def transform_data(event, context):
 # currency_df = pd.read_csv("test_files/test_currency.csv",
 #                           parse_dates=["created_at", "last_updated"])
 
+
+# sales_order_df = pd.read_csv("test_files/test_sales_order.csv",
+#                              parse_dates=["created_at", "last_updated", "agreed_delivery_date", "agreed_payment_date"])
+
+# purchase_order_df = pd.read_csv("test_files/test_purchase_order.csv",
+#                           parse_dates=["created_at", "last_updated", "agreed_delivery_date", "agreed_payment_date"])
+
+
 # with pd.option_context("display.max_columns", None):
 #     print(dim_location)
 
@@ -110,3 +118,43 @@ def format_dim_counterparty(counterparty_df, address_df):
     })
 
     return dim_counterparty
+
+
+def format_fact_sales_order(sales_order_df):
+
+    sales_order_df["sales_record_id"] = range(1, 1+len(sales_order_df))
+    sales_order_df["created_date"] = sales_order_df["created_at"].dt.date
+    sales_order_df["created_time"] = sales_order_df["created_at"].dt.time
+    sales_order_df["last_updated_date"] = sales_order_df["last_updated"].dt.date
+    sales_order_df["last_updated_time"] = sales_order_df["last_updated"].dt.time
+
+    fact_sales_order = sales_order_df[[
+        "sales_record_id",
+        "sales_order_id",
+        "created_date",
+        "created_time",
+        "last_updated_date",
+        "last_updated_time",
+        "staff_id",
+        "counterparty_id",
+        "units_sold",
+        "unit_price",
+        "currency_id",
+        "design_id",
+        "agreed_delivery_date",
+        "agreed_payment_date",
+        "agreed_delivery_location_id"
+    ]]
+    print(fact_sales_order)
+    return fact_sales_order
+
+
+# format_fact_sales_order(sales_order_df)
+
+
+def format_fact_purchase_order(purchase_order_df):
+    pass
+
+
+# with pd.option_context("display.max_columns", None):
+#     print(format_fact_sales_order(sales_order_df.head()))

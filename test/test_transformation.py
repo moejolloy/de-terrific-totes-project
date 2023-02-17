@@ -1,6 +1,6 @@
 from unittest.mock import Mock, patch
 import pandas as pd
-from src.transformation import format_dim_staff, format_dim_location, format_dim_design, format_dim_date, format_dim_currency, format_dim_counterparty
+from src.transformation import format_dim_staff, format_dim_location, format_dim_design, format_dim_date, format_dim_currency, format_dim_counterparty, format_fact_sales_order
 import datetime
 
 
@@ -149,3 +149,40 @@ def test_format_dim_counterparty_returns_expected_output():
 
     assert format_dim_counterparty(
         counterparty_df, address_df).equals(dim_counterparty_df)
+
+
+def test_format_fact_sales_order_returns_expected_output():
+    sales_order_data = {
+        "sales_order_id": [1, 2, 3],
+        "created_at": [datetime.datetime.fromisoformat("2022-11-03T14:20:51.563000"), datetime.datetime.fromisoformat("2022-11-03T14:20:51.563000"), datetime.datetime.fromisoformat("2022-11-03T14:20:51.563000")],
+        "last_updated": [datetime.datetime.fromisoformat("2022-11-03T14:20:51.563000"), datetime.datetime.fromisoformat("2022-11-03T14:20:51.563000"), datetime.datetime.fromisoformat("2022-11-03T14:20:51.563000")],
+        "design_id": ["des1", "des2", "des3"],
+        "staff_id": [1, 2, 3],
+        "counterparty_id": [1, 2, 3],
+        "units_sold": [100, 200, 300],
+        "unit_price": [2.45, 3.67, 9.87],
+        "currency_id": [1, 2, 3],
+        "agreed_delivery_date": [datetime.datetime.fromisoformat('2022-11-03'), datetime.datetime.fromisoformat('2022-11-03'), datetime.datetime.fromisoformat('2022-11-03')],
+        "agreed_payment_date": [datetime.datetime.fromisoformat('2022-11-03'), datetime.datetime.fromisoformat('2022-11-03'), datetime.datetime.fromisoformat('2022-11-03')],
+        "agreed_delivery_location_id": [1, 2, 3]
+    }
+    sales_order_df = pd.DataFrame(data=sales_order_data)
+    test_fact_sales_order_data = {
+        "sales_record_id": [1, 2, 3],
+        "sales_order_id": [1, 2, 3],
+        "created_date": [datetime.date.fromisoformat("2022-11-03"), datetime.date.fromisoformat("2022-11-03"), datetime.date.fromisoformat("2022-11-03")],
+        "created_time": [datetime.time.fromisoformat("14:20:51.563000"), datetime.time.fromisoformat("14:20:51.563000"), datetime.time.fromisoformat("14:20:51.563000")],
+        "last_updated_date": [datetime.date.fromisoformat("2022-11-03"), datetime.date.fromisoformat("2022-11-03"), datetime.date.fromisoformat("2022-11-03")],
+        "last_updated_time": [datetime.time.fromisoformat("14:20:51.563000"), datetime.time.fromisoformat("14:20:51.563000"), datetime.time.fromisoformat("14:20:51.563000")],
+        "staff_id": [1, 2, 3],
+        "counterparty_id": [1, 2, 3],
+        "units_sold": [100, 200, 300],
+        "unit_price": [2.45, 3.67, 9.87],
+        "currency_id": [1, 2, 3],
+        "design_id": ["des1", "des2", "des3"],
+        "agreed_delivery_date": [datetime.datetime.fromisoformat('2022-11-03'), datetime.datetime.fromisoformat('2022-11-03'), datetime.datetime.fromisoformat('2022-11-03')],
+        "agreed_payment_date": [datetime.datetime.fromisoformat('2022-11-03'), datetime.datetime.fromisoformat('2022-11-03'), datetime.datetime.fromisoformat('2022-11-03')],
+        "agreed_delivery_location_id": [1, 2, 3]
+    }
+    fact_sales_order_df = pd.DataFrame(data=test_fact_sales_order_data)
+    assert format_fact_sales_order(sales_order_df).equals(fact_sales_order_df)
