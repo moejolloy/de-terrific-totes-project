@@ -20,11 +20,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
-        uses: actions/checkout
+        uses: actions/checkout@v2
         with:
           ref: Github-actions-31
       - name: Use Python
-        uses: actions/setup-python
+        uses: actions/setup-python@v3
         with: 
           python-version: "3.9"
       - name: Install make
