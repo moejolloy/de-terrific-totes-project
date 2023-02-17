@@ -12,12 +12,11 @@ from pandas import Series, DataFrame
 import csv
 
 
-HOST = (f'nc-data-eng-totesys-production.chpsczt8h1nu.'
-        f'eu-west-2.rds.amazonaws.com')
-PORT = 5432
-USER = 'project_user_4'
-PASS = 'ZUr7UMAkA3mPQgrQ2jckFDfa'
-DATABASE = 'totesys'
+# HOST =
+# PORT = 
+# USER =
+# PASS = 
+# DATABASE =
 
 s3_resource = boto3.resource('s3')
 
