@@ -36,6 +36,7 @@ resource "aws_cloudwatch_log_metric_filter" "ingestion_lambda_success" {
   name           = "ingestion_lambda_success"
   pattern        = "Finished_ingestion_lambda"
   log_group_name = "/aws/lambda/${var.ingestion_lambda_name}"
+  depends_on     = [aws_cloudwatch_log_group.ingestion_cloudwatch_log_group]
 
   metric_transformation {
     name      = "EventCount"
