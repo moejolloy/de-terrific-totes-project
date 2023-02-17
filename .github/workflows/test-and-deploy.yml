@@ -39,10 +39,6 @@ jobs:
         run: make requirements
       - name: run dev setup
         run: make dev-setup
-      - name: Format code with autopep8
-        run: |
-           pip install autopep8
-           autopep8 --in-place --recursive .
       - name: run checkups
         run: make run-checks
 
