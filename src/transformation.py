@@ -1,5 +1,12 @@
 import boto3
 import pandas as pd
+from io import BytesIO
+import logging
+
+logger = logging.getLogger("processing")
+logger.setLevel(logging.INFO)
+
+s3 = boto3.client('s3')
 
 
 def transform_data(event, context):
@@ -15,35 +22,36 @@ def transform_data(event, context):
     Raises:
         unsure as yet
         """
+    staff_df = load_csv_from_s3("nc-marie-c-demo", "staff.csv")
+    dept_df = load_csv_from_s3("nc-marie-c-demo", "departments.csv")
+    counterparty_df = load_csv_from_s3("nc-marie-c-demo", "counterparty.csv")
+    currency_df = load_csv_from_s3("nc-marie-c-demo", "currency.csv")
+    design_df = load_csv_from_s3("nc-marie-c-demo", "design.csv")
+    sales_order_df = load_csv_from_s3("nc-marie-c-demo", "sales_order.csv")
+    address_df = load_csv_from_s3("nc-marie-c-demo", "address.csv")
 
-    s3 = boto3.client('s3')
+    dim_staff = format_dim_staff(staff_df, dept_df)
+    dim_location = format_dim_location(address_df)
+    dim_design = format_dim_design(design_df)
+    dim_date = format_dim_date(start='2020-01-01', end='2024-12-31')
+    dim_currency = format_dim_currency(currency_df)
+    dim_counterparty = format_dim_counterparty(counterparty_df, address_df)
+    fact_sales_order = format_fact_sales_order(sales_order_df)
 
-
-# staff_data = pd.read_csv("test_files/test_data_staff.csv",
-#                          parse_dates=["created_at", "last_updated"])
-
-# dept_data = pd.read_csv("test_files/test_data_departments.csv",
-#                         parse_dates=["created_at", "last_updated"])
-
-# location_df = pd.read_csv(
-#     "test_files/test_address.csv", parse_dates=["created_at", "last_updated"])
-
-# design_df = pd.read_csv("test_files/test_design.csv",
-#                         parse_dates=["created_at", "last_updated"])
-
-# currency_df = pd.read_csv("test_files/test_currency.csv",
-#                           parse_dates=["created_at", "last_updated"])
-
-
-# sales_order_df = pd.read_csv("test_files/test_sales_order.csv",
-#                              parse_dates=["created_at", "last_updated", "agreed_delivery_date", "agreed_payment_date"])
-
-# purchase_order_df = pd.read_csv("test_files/test_purchase_order.csv",
-#                           parse_dates=["created_at", "last_updated", "agreed_delivery_date", "agreed_payment_date"])
-
-
-# with pd.option_context("display.max_columns", None):
-#     print(dim_location)
+    export_parquet_to_s3(
+        dim_staff, "nc-marie-c-processed", "dim_staff.parquet")
+    export_parquet_to_s3(
+        dim_location, "nc-marie-c-processed", "dim_location.parquet")
+    export_parquet_to_s3(
+        dim_design, "nc-marie-c-processed", "dim_design.parquet")
+    export_parquet_to_s3(dim_date, "nc-marie-c-processed",
+                         "dim_design.parquet")
+    export_parquet_to_s3(
+        dim_currency, "nc-marie-c-processed", "dim_currency.parquet")
+    export_parquet_to_s3(
+        dim_counterparty, "nc-marie-c-processed", "dim_counterparty.parquet")
+    export_parquet_to_s3(
+        fact_sales_order, "nc-marie-c-processed", "fact_sales_order.parquet")
 
 
 def format_dim_staff(staff_df, dept_df):
@@ -149,12 +157,64 @@ def format_fact_sales_order(sales_order_df):
     return fact_sales_order
 
 
-# format_fact_sales_order(sales_order_df)
-
-
 def format_fact_purchase_order(purchase_order_df):
     pass
 
 
-# with pd.option_context("display.max_columns", None):
-#     print(format_fact_sales_order(sales_order_df.head()))
+# utils functions
+
+def load_csv_from_s3(bucket, key):
+    """ Retrieve a CSV file from an S3 bucket
+
+    Args:
+        bucket: Name of the S3 bucket from which to retrieve the file.
+        key: Key that the file is stored under in the named S3 bucket.
+
+    Returns:
+        DataFrame containing the contents of the CSV file.
+    """
+    try:
+        s3_response_object = s3.get_object(
+            Bucket=bucket, Key=key)
+        df = s3_response_object['Body'].read()
+        df = pd.read_csv(BytesIO(df), parse_dates=[
+                         "created_at", "last_updated"])
+        return df
+    except s3.exceptions.NoSuchBucket:
+        logger.critical('Bucket does not exist')
+        raise s3.exceptions.NoSuchBucket({}, '')
+    except s3.exceptions.NoSuchKey:
+        logger.critical("Key not found in bucket")
+        raise s3.exceptions.NoSuchKey({}, '')
+    except Exception as e:
+        logger.critical(e)
+        raise RuntimeError
+
+
+def export_parquet_to_s3(data, bucket, key):
+    """ Convert DataFrame to parquet file and store in an S3 bucket
+
+    Args:
+        data: Dataframe containing the data to store in the parquet file.
+        bucket: Name of the S3 bucket in which to store the file.
+        key: Key that the file will be stored under in the named S3 bucket.
+
+    Returns:
+        True if the function execution was successful, else None.
+    """
+    try:
+        data.to_parquet(f's3://{bucket}/{key}', index=True)
+        return True
+    except FileNotFoundError:
+        logger.critical("Bucket not found.")
+        raise FileNotFoundError
+    except ValueError:
+        logger.critical("Key not of correct format.")
+        raise ValueError
+    except AttributeError:
+        logger.critical(
+            "Object passed to the function is not of type DataFrame.")
+        raise AttributeError
+    except Exception as e:
+        logger.critical(e)
+        raise RuntimeError
