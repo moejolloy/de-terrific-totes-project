@@ -23,3 +23,9 @@ variable "population_lambda_name" {
   type    = string
   default = "population-lambda"
 }
+
+variable "database_info" {
+  description = "placeholder for sensitive database credentials"
+  type = string
+  sensitive = true
+}
