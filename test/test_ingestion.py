@@ -41,7 +41,7 @@ def s3_bucket(s3, bucket_name):
 
 
 # Test For Uploading To Bucket
-@patch('src.ingestion.sql_get_all_data', return_value = MOCK_QUERY_RETURN)
+@patch('src.ingestion.sql_select_query', return_value = MOCK_QUERY_RETURN)
 def test_function_returns_correct_format_for_df(s3, s3_bucket):
     import src.ingestion
 
@@ -60,7 +60,7 @@ def test_file_will_be_uploaded_to_bucket(s3, s3_bucket):
     import src.ingestion
 
 
-    with patch('src.ingestion.sql_get_all_data', return_value = MOCK_QUERY_RETURN):
+    with patch('src.ingestion.sql_select_query', return_value = MOCK_QUERY_RETURN):
         src.ingestion.data_to_bucket_csv_file(
                                                 TABLE_NAME, 
                                                 TABLE_COLUMNS, 
@@ -77,7 +77,7 @@ def test_file_in_bucket_has_correct_data(s3, s3_bucket):
     import src.ingestion
 
 
-    with patch('src.ingestion.sql_get_all_data', return_value = MOCK_QUERY_RETURN):
+    with patch('src.ingestion.sql_select_query', return_value = MOCK_QUERY_RETURN):
         src.ingestion.data_to_bucket_csv_file(
                                                 TABLE_NAME, 
                                                 TABLE_COLUMNS, 
