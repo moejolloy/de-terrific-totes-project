@@ -4,14 +4,16 @@ from unittest.mock import patch
 import pytest
 import os
 import botocore.errorfactory
-import botocore.exceptions as be
 import logging
+
 
 BUCKET_NAME = 'test_ingestion_bucket'
 BUCKET_KEY = 'test.csv'
 MOCK_QUERY_RETURN = [[1, 'row_1', 1], [2, 'row_2', 2]]
 TABLE_NAME = 'test_table'
 TABLE_COLUMNS = ['column_id', 'column_2', 'column_3']
+
+logger = logging.getLogger("TestLogger")
 
 
 @pytest.fixture(scope="function")
@@ -46,7 +48,7 @@ def test_function_returns_correct_format_for_df(s3, s3_bucket):
     import src.ingestion
 
 
-    result = src.ingestion.data_to_bucket_csv_file(
+    result = src.ingestion.data_to_bucket_csv_file( 'test_creds',
                                                     TABLE_NAME, 
                                                     TABLE_COLUMNS, 
                                                     BUCKET_NAME, 
@@ -61,7 +63,7 @@ def test_file_will_be_uploaded_to_bucket(s3, s3_bucket):
 
 
     with patch('src.ingestion.sql_select_query', return_value = MOCK_QUERY_RETURN):
-        src.ingestion.data_to_bucket_csv_file(
+        src.ingestion.data_to_bucket_csv_file(  'test_creds',
                                                 TABLE_NAME, 
                                                 TABLE_COLUMNS, 
                                                 BUCKET_NAME, 
@@ -78,7 +80,7 @@ def test_file_in_bucket_has_correct_data(s3, s3_bucket):
 
 
     with patch('src.ingestion.sql_select_query', return_value = MOCK_QUERY_RETURN):
-        src.ingestion.data_to_bucket_csv_file(
+        src.ingestion.data_to_bucket_csv_file(  'test_creds',
                                                 TABLE_NAME, 
                                                 TABLE_COLUMNS, 
                                                 BUCKET_NAME, 
@@ -86,3 +88,77 @@ def test_file_in_bucket_has_correct_data(s3, s3_bucket):
 
     data = s3.get_object(Bucket=BUCKET_NAME, Key='test.csv')['Body'].read()
     assert data == b',column_id,column_2,column_3\n0,1,row_1,1\n1,2,row_2,2\n'
+
+
+@patch('src.ingestion.sql_select_query', return_value = MOCK_QUERY_RETURN)
+def test_function_raises_and_logs_error_if_bucket_does_not_exist(s3, s3_bucket, caplog):
+    import src.ingestion
+
+
+    with pytest.raises(botocore.errorfactory.ClientError):
+        src.ingestion.data_to_bucket_csv_file(  
+                                            'test_creds',
+                                            TABLE_NAME, 
+                                            TABLE_COLUMNS, 
+                                            'no_bucket', 
+                                            BUCKET_KEY)
+    
+    assert caplog.records[0].levelno == logging.CRITICAL
+    assert caplog.records[0].msg == 'no_bucket does not exist in your S3'
+
+
+@patch('src.ingestion.sql_select_query', return_value = MOCK_QUERY_RETURN)
+def test_function_raises_and_logs_error_if_bucket_key_invalid(s3, s3_bucket, caplog):
+    import src.ingestion
+
+
+    with pytest.raises(botocore.exceptions.ParamValidationError):
+        src.ingestion.data_to_bucket_csv_file(
+                                            'test_creds',
+                                            TABLE_NAME, 
+                                            TABLE_COLUMNS, 
+                                            BUCKET_NAME, 
+                                            5)
+    
+    assert caplog.records[0].levelno == logging.CRITICAL
+    assert caplog.records[0].msg == 'The request has invalid params'
+
+
+@patch('src.ingestion.get_secret_value')
+@patch('src.ingestion.Connection')
+@patch('src.ingestion.data_to_bucket_csv_file')
+@patch('src.ingestion.sql_select_updated', return_value = True)
+def test_function_uploads_data_if_updated_is_true(mock_sql, mock_upload_function, mock_connection, mock_secret, caplog):
+    import src.ingestion
+    
+    
+    test_query = []
+    mock_connection().run.return_value = test_query
+    test_headers = []
+    mock_connection().columns = test_headers
+
+    src.ingestion.lambda_handler({}, {})
+    assert mock_upload_function.call_count == 11
+
+    assert caplog.records[0].levelno == logging.INFO
+    assert caplog.records[0].msg == 'SUCCESSFUL INGESTION'
+
+
+@patch('src.ingestion.get_secret_value')
+@patch('src.ingestion.Connection')
+@patch('src.ingestion.data_to_bucket_csv_file')
+@patch('src.ingestion.sql_select_updated', return_value = False)
+def test_function_does_not_upload_data_if_updated_is_false(mock_sql, mock_upload_function, mock_connection, mock_secret, caplog):
+    import src.ingestion
+    
+    
+    test_query = []
+    mock_connection().run.return_value = test_query
+    test_headers = []
+    mock_connection().columns = test_headers
+
+    src.ingestion.lambda_handler({}, {})
+    assert mock_upload_function.call_count == 0
+
+    assert caplog.records[0].levelno == logging.INFO
+    assert caplog.records[0].msg == 'NO FILES TO UPDATE'

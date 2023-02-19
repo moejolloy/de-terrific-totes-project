@@ -1,9 +1,10 @@
-"""Uploads database table data to separate 'csv' files on S3."""
+"""Uploads database table data to separate '.csv' files on S3."""
 import logging
-import pg8000.native as pg
+from pg8000.native import Connection
 import pg8000.exceptions as pge
 import boto3
-import botocore.exceptions as be
+import botocore.exceptions
+import botocore.errorfactory
 import pandas as pd
 from io import StringIO
 import json
@@ -12,7 +13,7 @@ import json
 logger = logging.getLogger("ingestion")
 logger.setLevel(logging.INFO)
 
-s3_resource = boto3.resource('s3')
+s3 = boto3.resource('s3')
 secrets = boto3.client('secretsmanager')
 
 
@@ -25,20 +26,28 @@ def lambda_handler(event, context):
 
     Raises:
     """
-    tables_list = ['staff', 'transaction', 'design', 'address', 
+    credentials = get_secret_value('database_credentials')
+    TABLES_LIST = ['staff', 'transaction', 'design', 'address', 
                     'sales_order', 'counterparty', 'payment', 
                     'payment_type', 'currency', 'department', 
                     'purchase_order']
-    bucket_name = 'ingest-bucket-totedd-140220230217153255264700000002' # INSERT BUCKET NAME HERE
-    
+    BUCKET = '' # INSERT BUCKET NAME HERE
+    INTERVAL = '30 minutes'
+    has_updated = False
     try:
-        columns = collect_column_headers(tables_list)
-        bucket_key = get_keys_from_table_names(tables_list)
-        for index, table in enumerate(tables_list):
-            data_to_bucket_csv_file(table, columns[index], 
-                                    bucket_name, bucket_key[index])
-        logger.info('SUCCESSFUL INGESTION')
-        print('SUCCESSFUL INGESTION')
+        columns = collect_column_headers(credentials, TABLES_LIST)
+        bucket_key = get_keys_from_table_names(TABLES_LIST)
+        for index, table in enumerate(TABLES_LIST):
+            if sql_select_updated(credentials, table, INTERVAL):
+                data_to_bucket_csv_file(credentials, table, columns[index], 
+                                        BUCKET, bucket_key[index])
+                has_updated = True
+        if has_updated:
+            logger.info('SUCCESSFUL INGESTION')
+            print('SUCCESSFUL INGESTION')
+        else:
+            logger.info('NO FILES TO UPDATE')
+            print('NO FILES TO UPDATE')
     except Exception as e:
         logger.critical(e)
         raise RuntimeError
@@ -52,34 +61,57 @@ def get_secret_value(secret_name: str) -> dict:
     Returns:
         Dictionary containing data on secret
     Raises:
-        DatabaseError
+        ResourseNotFoundException
+        ParamValidationError
+        UnrecognizedClientException
+        RuntimeError
     """
     try:
         secret_value = secrets.get_secret_value(SecretId = secret_name)
         secrets_dict = json.loads(secret_value["SecretString"])
-        return(secrets_dict)
+        return secrets_dict
     except secrets.exceptions.ResourceNotFoundException as e:
         logger.critical(f'The requested secret {secret_name} was not found')
         raise e
-    except be.ParamValidationError as e:
+    except botocore.exceptions.ParamValidationError as e:
         logger.critical('The request has invalid params')
         raise e
+    except botocore.exceptions.ClientError as e:
+        if e.response['Error']['Code'] == 'UnrecognizedClientException':
+            logger.critical('Security token invalid, check permissions')
+            raise e
     except Exception as e:
         logger.critical(e)
         raise RuntimeError
 
 
-def get_connection():
-    HOST = get_secret_value('database_credentials')['host'] # INSERT SECRET NAME HERE
-    PORT = get_secret_value('database_credentials')['port'] # INSERT SECRET NAME HERE
-    USER = get_secret_value('database_credentials')['user'] # INSERT SECRET NAME HERE
-    PASS = get_secret_value('database_credentials')['password'] # INSERT SECRET NAME HERE
-    DATABASE = get_secret_value('database_credentials')['database'] # INSERT SECRET NAME HERE
+def get_connection(credentials):
+    """ Attempts connection with database
+    Args:
+        credentials: The credentials required to access the database stored in secretsmanager as a dictionary.
+    Returns:
+        Connection class
+    Raises:
+        InterfaceError
+        RuntimeError
+    """
+    if __name__ == '__main__':
+        HOST = credentials['host']
+        PORT = credentials['port']
+        USER = credentials['user']
+        PASS = credentials['password']
+        DATABASE = credentials['database']
+    else:
+        HOST = 'TestHost'
+        PORT = 1234
+        DATABASE = 'TestDB'
+        USER = 'TestUser'
+        PASS = 'TestPassword'
     try:
-        return pg.Connection(USER, password = PASS, database = DATABASE, host = HOST, port = PORT)
-    except pge.DatabaseError:
-        logger.critical('DatabaseError: Unable to connect to database')
-        raise pge.DatabaseError('DatabaseError: Unable to connect to database')
+        return Connection(USER, password = PASS, database = DATABASE, host = HOST, port = PORT)
+    except pge.InterfaceError as e:
+        logger.critical(e)
+        raise e
     except Exception as e:
         logger.critial(e)
         raise RuntimeError
@@ -92,49 +124,98 @@ def get_keys_from_table_names(tables, file_path = ''):
         file_path : Add a file path for a folder-like structure in S3. (OPTIONAL)
     Returns:
         A list of table names with appended file extension.
-    Raises:
     """
     return [f'{file_path}{table_name}.csv' for table_name in tables]
     
 
 
-def sql_select_column_headers(table, conn):
+def sql_select_column_headers(credentials, table):
     """ Queries database find column headers for a table.
     Args:
+        credentials: The credentials required to access the database stored in secretsmanager as a dictionary.
         table: The name of a table.
     Returns:
-        A collection of nested lists containing table headers.
+        A list of column headers for that table.
     Raises:
+        Database Error
+        RuntimeError
     """
-    conn.run(f'SELECT * FROM {table};')
-    return ([column['name'] for column in conn.columns])
+    conn = get_connection(credentials)
+    try:
+        conn.run(f'SELECT * FROM {table} LIMIT 0;')
+        return [column['name'] for column in conn.columns]
+    except pge.DatabaseError as e:
+        logger.critical(f'DatabaseError: {table} does not exist in database')
+        raise e
+    except Exception as e:
+        logger.critical(e)
+        raise RuntimeError 
 
 
-def collect_column_headers(tables):
+def collect_column_headers(credentials, tables):
     """ Collects column headers from sql query into a list.
     Args:
+        credentials: The credentials required to access the database stored in secretsmanager as a dictionary.
         table: A list of table names.
     Returns:
-        A collection of nested lists containing table headers.
+        A collection of nested lists containing all table headers.
     """
     table_headers_list = []
     for table in tables:
-        table_headers_list.append(sql_select_column_headers(table, get_connection()))
+        table_headers_list.append(sql_select_column_headers(credentials, table))
     return table_headers_list
 
 
-def sql_select_query(table, conn):
+def sql_select_query(credentials, table):
     """ Queries database to select all data from a table.
     Args:
+        credentials: The credentials required to access the database stored in secretsmanager as a dictionary.
         table: The name of the table to get data from. 
     Returns:
         A collection of nested lists of row data
     Raises:
+        DatabaseError
+        RuntimeError
     """
-    return conn.run(f'SELECT * FROM {table};')
+    try:
+        conn = get_connection(credentials)
+        return conn.run(f'SELECT * FROM {table};')
+    except pge.DatabaseError as e:
+        logger.critical(f'DatabaseError: {table} does not exist in database')
+        raise e
+    except Exception as e:
+        logger.critical(e)
+        raise RuntimeError 
+    
+
+def sql_select_updated(credentials, table, interval):
+    """ Queries database to check a table has been updated since the last interval.
+    Args:
+        credentials: The credentials required to access the database stored in secretsmanager as a dictionary.
+        table: The name of the table to get data from. 
+        interval: The time between interval and now to check against the 'last_updated' column
+    Returns:
+        A boolean for whether the table has been updated
+    Raises:
+        DatabaseError
+        RuntimeError
+    """
+    conn = get_connection(credentials)
+    try:
+        updated = conn.run(f'SELECT last_updated FROM {table} WHERE last_updated > now() - INTERVAL \'{interval}\' LIMIT 1;')
+        if len(updated) != 0:
+            return True
+        else:
+            return False
+    except pge.DatabaseError as e:
+        logger.critical(f'DatabaseError: {table} does not exist in database')
+        raise e
+    except Exception as e:
+        logger.critical(e)
+        raise RuntimeError
 
 
-def data_to_bucket_csv_file(table_name, column_headers, bucket_name, bucket_key):
+def data_to_bucket_csv_file(credentials, table_name, column_headers, bucket_name, bucket_key):
     """ Takes data collected from 'sql_get_all_data' function 
         and uploads it to S3 as a csv file.
     Args:
@@ -144,10 +225,13 @@ def data_to_bucket_csv_file(table_name, column_headers, bucket_name, bucket_key)
         bucket_key: The name of the file and path the data will be stored in.
     Returns:
         Formated data as a list of dictionaries.
-    Raises:
+    Raises: 
+        NoSuchBucket
+        ParamValidationError
+        RuntimeError
     """
     try:
-        data_from_table = sql_select_query(table_name, get_connection())
+        data_from_table = sql_select_query(credentials, table_name)
         rows_list = []
         for row in data_from_table:
             row_data_dict = {}
@@ -157,12 +241,15 @@ def data_to_bucket_csv_file(table_name, column_headers, bucket_name, bucket_key)
         df = pd.DataFrame(data = rows_list, columns = column_headers)
         csv_buffer = StringIO()
         df.to_csv(csv_buffer)
-        s3_resource.Object(bucket_name, bucket_key).put(Body = csv_buffer.getvalue())
+        s3.Object(bucket_name, bucket_key).put(Body = csv_buffer.getvalue())
         return rows_list
+    except botocore.errorfactory.ClientError as e:
+        if e.response['Error']['Code'] == 'NoSuchBucket':
+            logger.critical(f'{bucket_name} does not exist in your S3')
+            raise e
+    except botocore.exceptions.ParamValidationError as e:
+        logger.critical('The request has invalid params')
+        raise e
     except Exception as e:
         logger.critical(e)
         raise RuntimeError
-
-
-if __name__ == "__main__":
-    lambda_handler({}, {})

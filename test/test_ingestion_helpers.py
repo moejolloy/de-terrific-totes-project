@@ -5,6 +5,7 @@ import pytest
 import os
 import botocore.errorfactory
 import botocore.exceptions as be
+import pg8000.exceptions as pge
 import logging
 
 logger = logging.getLogger("TestLogger")
@@ -74,6 +75,16 @@ def test_logging_all_other_errors(caplog):
         assert caplog.records[0].levelno == logging.CRITICAL
 
 
+# Test Get Connection
+def test_get_connection_raises_error_if_details_are_incorrect_and_logs_critial(caplog):
+    from src.ingestion import get_connection
+
+    with pytest.raises(pge.InterfaceError):
+        get_connection(credentials='test')
+    
+    assert caplog.records[0].levelno == logging.CRITICAL
+
+
 # Test SQL Helpers
 def test_get_keys_from_table_names_applies_correct_suffix():
     from src.ingestion import get_keys_from_table_names
@@ -81,3 +92,63 @@ def test_get_keys_from_table_names_applies_correct_suffix():
     
     result = get_keys_from_table_names(['table_1', 'table_2', 'table_3'])
     assert result == ['table_1.csv', 'table_2.csv', 'table_3.csv']
+
+
+@patch('src.ingestion.Connection')
+def test_sql_select_column_headers_returns_column_headers_from_table(mock_connection):
+    from src.ingestion import sql_select_column_headers
+
+
+    test_result = [{'name': 'col_1'}, {'name': 'col_2'}, {'name': 'col_3'}]
+    mock_connection().columns = test_result
+    assert sql_select_column_headers('test','table') == ['col_1', 'col_2', 'col_3']
+
+
+@patch('src.ingestion.sql_select_column_headers', return_value = ['col_1', 'col_2', 'col_3'])
+def test_collect_column_headers_colates_lists_returned_from_sql_select_column_headers(mock_sql):
+    from src.ingestion import collect_column_headers
+
+    result = collect_column_headers('test', ['table_1', 'table_2'])
+    assert result == [['col_1', 'col_2', 'col_3'], ['col_1', 'col_2', 'col_3']]
+
+
+@patch('src.ingestion.Connection')
+def test_sql_select_query_returns_list_of_row_data_from_database(mock_connection):
+    from src.ingestion import sql_select_query
+
+    test_result = [['Alex', 1], ['Rachael', 2], ['Joe', 3]]
+    mock_connection().run.return_value = test_result
+    assert sql_select_query('test', 'table') == test_result
+
+
+@patch('src.ingestion.Connection')
+def test_sql_select_updated_returns_true_if_database_has_been_updated_at_interval(mock_connection):
+    from src.ingestion import sql_select_updated
+
+    test_result = [['some data', 1]]
+    mock_connection().run.return_value = test_result
+    assert sql_select_updated('test', 'table', '2 days') == True
+
+
+@patch('src.ingestion.Connection')
+def test_sql_select_updated_returns_false_if_database_has_not_been_updated_at_interval(mock_connection):
+    from src.ingestion import sql_select_updated
+
+    test_result = []
+    mock_connection().run.return_value = test_result
+    assert sql_select_updated('test', 'table', '1 day') == False
+
+
+@patch('src.ingestion.Connection')
+def test_sql_select_updated_raises_and_logs_database_error_if_table_not_in_database(mock_connection):
+    import src.ingestion
+    
+    
+    table_names = ['table_1', 'table_2', 'table_3']
+    check_table = 'table'
+    with patch('src.ingestion.sql_select_updated') as mock:
+        if check_table not in table_names:
+            mock.side_effect = pge.DatabaseError
+        with pytest.raises(pge.DatabaseError):
+            src.ingestion.sql_select_updated('test', 'table', '1 day')
+            
