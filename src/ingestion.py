@@ -13,12 +13,14 @@ import json
 logger = logging.getLogger("ingestion")
 logger.setLevel(logging.INFO)
 
-s3 = boto3.resource('s3')
+s3_resource = boto3.resource('s3')
+s3_client = boto3.client('s3')
 secrets = boto3.client('secretsmanager')
 
 
 def lambda_handler(event, context):
     """ Handles functions to pull data from database and upload as a csv file to S3
+    Checks if the data exists on s3 and if the table has been updated since the last interval before uploading
     Args:
         event:
     
@@ -36,11 +38,12 @@ def lambda_handler(event, context):
     has_updated = False
     try:
         columns = collect_column_headers(credentials, TABLES_LIST)
-        bucket_key = get_keys_from_table_names(TABLES_LIST)
+        bucket_keys = get_keys_from_table_names(TABLES_LIST)
+        data_on_s3 = check_key_exists(BUCKET, bucket_keys[0])
         for index, table in enumerate(TABLES_LIST):
-            if sql_select_updated(credentials, table, INTERVAL):
+            if sql_select_updated(credentials, table, INTERVAL) or not data_on_s3:
                 data_to_bucket_csv_file(credentials, table, columns[index], 
-                                        BUCKET, bucket_key[index])
+                                        BUCKET, bucket_keys[index])
                 has_updated = True
         if has_updated:
             logger.info('SUCCESSFUL INGESTION')
@@ -203,16 +206,29 @@ def sql_select_updated(credentials, table, interval):
     conn = get_connection(credentials)
     try:
         updated = conn.run(f'SELECT last_updated FROM {table} WHERE last_updated > now() - INTERVAL \'{interval}\' LIMIT 1;')
-        if len(updated) != 0:
-            return True
-        else:
-            return False
+        return True if len(updated) != 0 else False
     except pge.DatabaseError as e:
         logger.critical(f'DatabaseError: {table} does not exist in database')
         raise e
     except Exception as e:
         logger.critical(e)
         raise RuntimeError
+
+
+def check_key_exists(bucket_name, bucket_key):
+    """ Checks if key exists in s3.
+    Args:
+        bucket_name: The name of the bucket containing the file
+        bucket_key: The filepath and name of the file in s3
+    Returns:
+        A boolean for whether the key exists
+    """
+    try:
+        meta_data = s3_client.head_object(Bucket = bucket_name, Key = bucket_key)
+        return True
+    except botocore.exceptions.ClientError as e:
+        if e.response['Error']['Code'] == "NoSuchKey":
+            return False
 
 
 def data_to_bucket_csv_file(credentials, table_name, column_headers, bucket_name, bucket_key):
@@ -241,7 +257,7 @@ def data_to_bucket_csv_file(credentials, table_name, column_headers, bucket_name
         df = pd.DataFrame(data = rows_list, columns = column_headers)
         csv_buffer = StringIO()
         df.to_csv(csv_buffer)
-        s3.Object(bucket_name, bucket_key).put(Body = csv_buffer.getvalue())
+        s3_resource.Object(bucket_name, bucket_key).put(Body = csv_buffer.getvalue())
         return rows_list
     except botocore.errorfactory.ClientError as e:
         if e.response['Error']['Code'] == 'NoSuchBucket':

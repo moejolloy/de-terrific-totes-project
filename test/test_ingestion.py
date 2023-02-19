@@ -127,8 +127,9 @@ def test_function_raises_and_logs_error_if_bucket_key_invalid(s3, s3_bucket, cap
 @patch('src.ingestion.get_secret_value')
 @patch('src.ingestion.Connection')
 @patch('src.ingestion.data_to_bucket_csv_file')
-@patch('src.ingestion.sql_select_updated', return_value = True)
-def test_function_uploads_data_if_updated_is_true(mock_sql, mock_upload_function, mock_connection, mock_secret, caplog):
+@patch('src.ingestion.check_key_exists', return_value = False)
+@patch('src.ingestion.sql_select_updated', return_value = False)
+def test_function_uploads_data_for_first_time_on_s3(mock_sql, mock_no_key, mock_upload_function, mock_connection, mock_secret, caplog):
     import src.ingestion
     
     
@@ -147,8 +148,30 @@ def test_function_uploads_data_if_updated_is_true(mock_sql, mock_upload_function
 @patch('src.ingestion.get_secret_value')
 @patch('src.ingestion.Connection')
 @patch('src.ingestion.data_to_bucket_csv_file')
+@patch('src.ingestion.check_key_exists', return_value = True)
+@patch('src.ingestion.sql_select_updated', return_value = True)
+def test_function_uploads_data_if_updated_is_true(mock_sql, mock_key, mock_upload_function, mock_connection, mock_secret, caplog):
+    import src.ingestion
+    
+    
+    test_query = []
+    mock_connection().run.return_value = test_query
+    test_headers = []
+    mock_connection().columns = test_headers
+
+    src.ingestion.lambda_handler({}, {})
+    assert mock_upload_function.call_count == 11
+
+    assert caplog.records[0].levelno == logging.INFO
+    assert caplog.records[0].msg == 'SUCCESSFUL INGESTION'
+
+
+@patch('src.ingestion.get_secret_value')
+@patch('src.ingestion.Connection')
+@patch('src.ingestion.data_to_bucket_csv_file')
+@patch('src.ingestion.check_key_exists', return_value = True)
 @patch('src.ingestion.sql_select_updated', return_value = False)
-def test_function_does_not_upload_data_if_updated_is_false(mock_sql, mock_upload_function, mock_connection, mock_secret, caplog):
+def test_function_does_not_upload_data_if_updated_is_false(mock_sql, mock_key, mock_upload_function, mock_connection, mock_secret, caplog):
     import src.ingestion
     
     
