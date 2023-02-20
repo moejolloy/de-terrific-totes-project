@@ -31,7 +31,7 @@ def secretsmanager(aws_credentials):
 @pytest.fixture
 def create_secret(secretsmanager):
     secretsmanager.create_secret(
-        Name="MySecret", 
+        Name="MySecret",
         SecretString='{"username":"username","password":"password"}'
     )
 
@@ -86,12 +86,12 @@ def test_logging_all_other_errors(caplog):
 # Test Get Connection
 def test_get_connection_raises_error_if_details_are_incorrect_and_logs_critial(
     caplog):
-    from src.ingestion import get_connection
+        from src.ingestion import get_connection
 
-    with pytest.raises(pge.InterfaceError):
-        get_connection(credentials="test")
+        with pytest.raises(pge.InterfaceError):
+            get_connection(credentials="test")
 
-    assert caplog.records[0].levelno == logging.CRITICAL
+        assert caplog.records[0].levelno == logging.CRITICAL
 
 
 # Test SQL Helpers
@@ -101,12 +101,13 @@ def test_get_keys_from_table_names_applies_correct_suffix():
     result = get_keys_from_table_names(["table_1", "table_2", "table_3"])
     assert result == ["table_1.csv", "table_2.csv", "table_3.csv"]
 
+
 columns123 = ["col_1", "col_2", "col_3"]
 
+
 @patch("src.ingestion.Connection")
-def test_sql_select_column_headers_returns_column_headers_from_table(
-    mock_connection):
-    
+def test_sql_select_column_headers_returns_column_headers(mock_connection):
+
     from src.ingestion import sql_select_column_headers
 
     test_result = [{"name": "col_1"}, {"name": "col_2"}, {"name": "col_3"}]
@@ -140,8 +141,8 @@ def test_select_updated_returns_true_if_database_has_been_updated_at_interval(
 
     test_result = [["some data", 1]]
     mock_connection().run.return_value = test_result
-    assert sql_select_updated("test", "table", "2 days") == True
-
+    assert sql_select_updated("test", "table", "2 days")
+    #works with assert sql_select_updated("test", "table", "2 days") == True
 
 @patch("src.ingestion.Connection")
 def test_select_updated_returns_false_if_database_is_not_updated_at_interval(
@@ -151,7 +152,8 @@ def test_select_updated_returns_false_if_database_is_not_updated_at_interval(
 
     test_result = []
     mock_connection().run.return_value = test_result
-    assert sql_select_updated("test", "table", "1 day") == False
+    assert not sql_select_updated("test", "table", "1 day")
+    #works with assert sql_select_updated("test", "table", "1 day") == False
 
 
 @patch("src.ingestion.Connection")

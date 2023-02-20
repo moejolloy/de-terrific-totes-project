@@ -60,7 +60,7 @@ def test_file_will_be_uploaded_to_bucket(s3, s3_bucket):
     import src.ingestion
 
     with patch("src.ingestion.sql_select_query",
-        return_value=MOCK_QUERY_RETURN):
+               return_value=MOCK_QUERY_RETURN):
 
         src.ingestion.data_to_bucket_csv_file(
             "test_creds", TABLE_NAME, TABLE_COLUMNS, BUCKET_NAME, BUCKET_KEY
@@ -76,7 +76,7 @@ def test_file_in_bucket_has_correct_data(s3, s3_bucket):
     import src.ingestion
 
     with patch("src.ingestion.sql_select_query",
-        return_value=MOCK_QUERY_RETURN):
+               return_value=MOCK_QUERY_RETURN):
         src.ingestion.data_to_bucket_csv_file(
             "test_creds", TABLE_NAME, TABLE_COLUMNS, BUCKET_NAME, BUCKET_KEY
         )
@@ -87,7 +87,7 @@ def test_file_in_bucket_has_correct_data(s3, s3_bucket):
 
 @patch("src.ingestion.sql_select_query", return_value=MOCK_QUERY_RETURN)
 def test_function_raises_and_logs_error_if_bucket_does_not_exist(s3, s3_bucket,
-    caplog):
+                                                                 caplog):
     import src.ingestion
 
     with pytest.raises(botocore.errorfactory.ClientError):
@@ -101,7 +101,7 @@ def test_function_raises_and_logs_error_if_bucket_does_not_exist(s3, s3_bucket,
 
 @patch("src.ingestion.sql_select_query", return_value=MOCK_QUERY_RETURN)
 def test_function_raises_and_logs_error_if_bucket_key_invalid(s3, s3_bucket,
-    caplog):
+                                                              caplog):
     import src.ingestion
 
     with pytest.raises(botocore.exceptions.ParamValidationError):
