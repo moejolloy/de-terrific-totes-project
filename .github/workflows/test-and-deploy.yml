@@ -1,9 +1,9 @@
 name: Test and Deploy
 
 on:
-  push:
-    branches: 
-      - Github-actions-31
+  # push:
+  #   branches: 
+  #     - add branch name here
   pull_request:
     branches:
       - main
@@ -15,8 +15,8 @@ on:
         required: false
 
 jobs:
-  makefile:
-    name: makefile
+  Unit_test_and_pep8_compliance:
+    name: Unit_test_and_pep8_compliance
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
