@@ -15,12 +15,13 @@ resource "aws_lambda_permission" "allow_s3_dummy_file_reader" {
 }
 
 resource "aws_lambda_function" "ingestion_lambda" {
-  filename      = "${path.module}/../zips/ingestion.zip"
-  function_name = var.ingestion_lambda_name
-  role          = aws_iam_role.ingest-lambda-role.arn
-  handler       = "ingestion.lambda_handler"
-  runtime       = "python3.9"
-  layers        = [aws_lambda_layer_version.pandas_layer.arn, aws_lambda_layer_version.other_dependencies_layer.arn]
+  filename         = data.archive_file.ingestion_lambda_zipper.output_path
+  source_code_hash = data.archive_file.ingestion_lambda_zipper.output_base64sha256
+  function_name    = var.ingestion_lambda_name
+  role             = aws_iam_role.ingest-lambda-role.arn
+  handler          = "ingestion.lambda_handler"
+  runtime          = "python3.9"
+  layers           = [aws_lambda_layer_version.layer_1.arn, aws_lambda_layer_version.layer_2.arn]
 }
 
 resource "aws_lambda_permission" "allow_eventbridge_ingestion_lambda" {
@@ -43,20 +44,25 @@ resource "aws_cloudwatch_event_target" "ingestion_lambda_target" {
 }
 
 resource "aws_lambda_function" "processing_lambda" {
-  filename      = "${path.module}/../zips/transformation.zip"
-  function_name = var.processing_lambda_name
-  role          = aws_iam_role.processed-lambda-role.arn
-  handler       = "transformation.transform_data"
-  runtime       = "python3.9"
-  layers        = [aws_lambda_layer_version.pandas_layer.arn, aws_lambda_layer_version.other_dependencies_layer.arn]
+  filename         = data.archive_file.ingestion_lambda_zipper.output_path
+  source_code_hash = data.archive_file.processing_lambda_zipper.output_base64sha256
+  function_name    = var.processing_lambda_name
+  role             = aws_iam_role.processed-lambda-role.arn
+  handler          = "transformation.transform_data"
+  runtime          = "python3.9"
+  layers           = [aws_lambda_layer_version.layer_1.arn, aws_lambda_layer_version.layer_2.arn]
 }
 
-resource "aws_lambda_layer_version" "pandas_layer" {
-  filename   = "${path.module}/../zips/pandas.zip"
-  layer_name = "pandas_layer"
+resource "aws_lambda_layer_version" "layer_1" {
+  filename            = data.archive_file.layer_1_zipper.output_path
+  layer_name          = "layer_1"
+  source_code_hash    = data.archive_file.layer_1_zipper.output_base64sha256
+  compatible_runtimes = ["python3.9"]
 }
 
-resource "aws_lambda_layer_version" "other_dependencies_layer" {
-  filename   = "${path.module}/../zips/other_dependencies.zip"
-  layer_name = "other_dependencies_layer"
+resource "aws_lambda_layer_version" "layer_2" {
+  filename            = data.archive_file.layer_2_zipper.output_path
+  layer_name          = "layer_2"
+  source_code_hash    = data.archive_file.layer_2_zipper.output_base64sha256
+  compatible_runtimes = ["python3.9"]
 }

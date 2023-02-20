@@ -1,5 +1,0 @@
-
-Pandas
-fsspec
-s3fs
-pg8000
