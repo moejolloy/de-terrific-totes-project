@@ -59,7 +59,9 @@ def test_function_returns_correct_format_for_df(s3, s3_bucket):
 def test_file_will_be_uploaded_to_bucket(s3, s3_bucket):
     import src.ingestion
 
-    with patch("src.ingestion.sql_select_query", return_value=MOCK_QUERY_RETURN):
+    with patch("src.ingestion.sql_select_query",
+    return_value=MOCK_QUERY_RETURN):
+
         src.ingestion.data_to_bucket_csv_file(
             "test_creds", TABLE_NAME, TABLE_COLUMNS, BUCKET_NAME, BUCKET_KEY
         )
@@ -73,7 +75,8 @@ def test_file_will_be_uploaded_to_bucket(s3, s3_bucket):
 def test_file_in_bucket_has_correct_data(s3, s3_bucket):
     import src.ingestion
 
-    with patch("src.ingestion.sql_select_query", return_value=MOCK_QUERY_RETURN):
+    with patch("src.ingestion.sql_select_query",
+    return_value=MOCK_QUERY_RETURN):
         src.ingestion.data_to_bucket_csv_file(
             "test_creds", TABLE_NAME, TABLE_COLUMNS, BUCKET_NAME, BUCKET_KEY
         )
@@ -83,7 +86,8 @@ def test_file_in_bucket_has_correct_data(s3, s3_bucket):
 
 
 @patch("src.ingestion.sql_select_query", return_value=MOCK_QUERY_RETURN)
-def test_function_raises_and_logs_error_if_bucket_does_not_exist(s3, s3_bucket, caplog):
+def test_function_raises_and_logs_error_if_bucket_does_not_exist(
+    s3, s3_bucket, caplog):
     import src.ingestion
 
     with pytest.raises(botocore.errorfactory.ClientError):
@@ -96,7 +100,8 @@ def test_function_raises_and_logs_error_if_bucket_does_not_exist(s3, s3_bucket, 
 
 
 @patch("src.ingestion.sql_select_query", return_value=MOCK_QUERY_RETURN)
-def test_function_raises_and_logs_error_if_bucket_key_invalid(s3, s3_bucket, caplog):
+def test_function_raises_and_logs_error_if_bucket_key_invalid(
+    s3, s3_bucket, caplog):
     import src.ingestion
 
     with pytest.raises(botocore.exceptions.ParamValidationError):
@@ -114,7 +119,8 @@ def test_function_raises_and_logs_error_if_bucket_key_invalid(s3, s3_bucket, cap
 @patch("src.ingestion.check_key_exists", return_value=False)
 @patch("src.ingestion.sql_select_updated", return_value=False)
 def test_function_uploads_data_for_first_time_on_s3(
-    mock_sql, mock_no_key, mock_upload_function, mock_connection, mock_secret, caplog
+    mock_sql, mock_no_key, mock_upload_function, mock_connection,
+    mock_secret, caplog
 ):
     import src.ingestion
 
@@ -136,7 +142,8 @@ def test_function_uploads_data_for_first_time_on_s3(
 @patch("src.ingestion.check_key_exists", return_value=True)
 @patch("src.ingestion.sql_select_updated", return_value=True)
 def test_function_uploads_data_if_updated_is_true(
-    mock_sql, mock_key, mock_upload_function, mock_connection, mock_secret, caplog
+    mock_sql, mock_key, mock_upload_function, mock_connection,
+    mock_secret, caplog
 ):
     import src.ingestion
 
@@ -158,7 +165,8 @@ def test_function_uploads_data_if_updated_is_true(
 @patch("src.ingestion.check_key_exists", return_value=True)
 @patch("src.ingestion.sql_select_updated", return_value=False)
 def test_function_does_not_upload_data_if_updated_is_false(
-    mock_sql, mock_key, mock_upload_function, mock_connection, mock_secret, caplog
+    mock_sql, mock_key, mock_upload_function, mock_connection,
+    mock_secret, caplog
 ):
     import src.ingestion
 

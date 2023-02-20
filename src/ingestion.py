@@ -51,10 +51,12 @@ def lambda_handler(event, context):
         bucket_keys = get_keys_from_table_names(TABLES_LIST)
         data_on_s3 = check_key_exists(BUCKET, bucket_keys[0])
         for index, table in enumerate(TABLES_LIST):
-            if sql_select_updated(credentials, table, INTERVAL) or not data_on_s3:
+            if sql_select_updated(credentials, table,
+            INTERVAL) or not data_on_s3:
 
                 data_to_bucket_csv_file(
-                    credentials, table, columns[index], BUCKET, bucket_keys[index]
+                    credentials, table, columns[index], BUCKET,
+                    bucket_keys[index]
                 )
 
                 has_updated = True
@@ -123,7 +125,8 @@ def get_connection(credentials):
         USER = "TestUser"
         PASS = "TestPassword"
     try:
-        return Connection(USER, password=PASS, database=DATABASE, host=HOST, port=PORT)
+        return Connection(USER, password=PASS, database=DATABASE, host=HOST,
+        port=PORT)
     except pge.InterfaceError as e:
         logger.critical(e)
         raise e
@@ -179,7 +182,9 @@ def collect_column_headers(credentials, tables):
     """
     table_headers_list = []
     for table in tables:
-        table_headers_list.append(sql_select_column_headers(credentials, table))
+        table_headers_list.append(sql_select_column_headers(credentials,
+        table))
+
     return table_headers_list
 
 
@@ -207,7 +212,9 @@ def sql_select_query(credentials, table):
 
 
 def sql_select_updated(credentials, table, interval):
-    """Queries database to check a table has been updated since the last interval.
+    """Queries database to check a table has been updated since the
+    last interval.
+
     Args:
         credentials: The credentials required to access the database
         stored in secretsmanager as a dictionary.
@@ -281,7 +288,8 @@ def data_to_bucket_csv_file(
         df = pd.DataFrame(data=rows_list, columns=column_headers)
         csv_buffer = StringIO()
         df.to_csv(csv_buffer)
-        s3_resource.Object(bucket_name, bucket_key).put(Body=csv_buffer.getvalue())
+        s3_resource.Object(bucket_name, bucket_key).put(
+            Body=csv_buffer.getvalue())
 
         return rows_list
     except botocore.errorfactory.ClientError as e:
