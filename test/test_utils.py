@@ -152,7 +152,7 @@ def test_logging_AttributeError(caplog):
         with pytest.raises(AttributeError):
             src.utils.export_parquet_to_s3(pd.DataFrame, '', '')
         assert caplog.records[0].levelno == logging.CRITICAL
-        assert caplog.records[0].msg == "Object passed to the function is"
+        assert caplog.records[0].msg == "Object passed to the function is "
         + "not of type DataFrame."
 
 
