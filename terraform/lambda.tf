@@ -41,3 +41,12 @@ resource "aws_cloudwatch_event_target" "ingestion_lambda_target" {
   arn  = aws_lambda_function.ingestion_lambda.arn
   rule = aws_cloudwatch_event_rule.ingestion_lambda_event_rule.name
 }
+
+resource "aws_lambda_function" "processing_lambda" {
+  filename      = "${path.module}/../zips/transformation.zip"
+  function_name = var.processing_lambda_name
+  role          = aws_iam_role.processed-lambda-role.arn
+  handler       = "transformation.tbc"
+  # handler name to be confirmed ^^
+  runtime = "python3.9"
+}

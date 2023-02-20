@@ -8,6 +8,7 @@ import pytest
 import logging
 
 
+
 def test_load_csv_from_s3_reads_file_from_bucket_and_returns_dataframe():
     with patch('src.utils.s3.get_object') as mock:
         read_file = b'ID\n1\n2'
@@ -20,6 +21,7 @@ def test_load_csv_from_s3_reads_file_from_bucket_and_returns_dataframe():
 
 
 def test_load_csv_from_s3_reads_complex_file_from_bucket_returns_dataframe():
+
     with patch('src.utils.s3.get_object') as mock:
         read_file = b'ID,Name,Age\n1,Sam,31\n2,Joe,14\n3,Max,44'
         body = StreamingBody(io.BytesIO(read_file), len(read_file))
@@ -82,6 +84,7 @@ def test_logging_NoSuchKey_error(caplog):
             src.utils.load_csv_from_s3('Test', 'Test')
         assert caplog.records[0].levelno == logging.CRITICAL
         assert caplog.records[0].msg == "Key not found in bucket"
+
 
 
 def test_logging_other_errors_load(caplog):
@@ -151,6 +154,7 @@ def test_logging_AttributeError(caplog):
         mock.side_effect = response_error
         with pytest.raises(AttributeError):
             src.utils.export_parquet_to_s3(pd.DataFrame, '', '')
+        expected = "Object passed to the function is not of type DataFrame."
         assert caplog.records[0].levelno == logging.CRITICAL
         assert caplog.records[0].msg == "Object passed to the "\
             "function is not of type DataFrame."
