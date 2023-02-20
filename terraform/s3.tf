@@ -1,9 +1,9 @@
 resource "aws_s3_bucket" "ingest-bucket" {
-  bucket_prefix = "ingest-bucket-totedd-1402"
+  bucket = "terrific-totes-ingest-bucket-1"
 }
 
 resource "aws_s3_bucket" "processed-bucket" {
-  bucket_prefix = "processed-bucket-totedd-1403"
+  bucket = "terrific-totes-processed-bucket-1"
 }
 
 resource "aws_s3_bucket_notification" "dummy_lambda_bucket_notification" {

@@ -18,9 +18,9 @@ resource "aws_lambda_function" "ingestion_lambda" {
   filename      = "${path.module}/../zips/ingestion.zip"
   function_name = var.ingestion_lambda_name
   role          = aws_iam_role.ingest-lambda-role.arn
-  handler       = "ingestion.tbc"
-  # handler name to be confirmed ^^
-  runtime = "python3.9"
+  handler       = "ingestion.lambda_handler"
+  runtime       = "python3.9"
+  layers        = [aws_lambda_layer_version.dependencies_layer.arn]
 }
 
 resource "aws_lambda_permission" "allow_eventbridge_ingestion_lambda" {
@@ -46,7 +46,12 @@ resource "aws_lambda_function" "processing_lambda" {
   filename      = "${path.module}/../zips/transformation.zip"
   function_name = var.processing_lambda_name
   role          = aws_iam_role.processed-lambda-role.arn
-  handler       = "transformation.tbc"
-  # handler name to be confirmed ^^
-  runtime = "python3.9"
+  handler       = "transformation.transform_data"
+  runtime       = "python3.9"
+  layers        = [aws_lambda_layer_version.dependencies_layer.arn]
+}
+
+resource "aws_lambda_layer_version" "dependencies_layer" {
+  filename   = "${path.module}/../zips/dependencies.zip"
+  layer_name = "dependencies_layer"
 }
