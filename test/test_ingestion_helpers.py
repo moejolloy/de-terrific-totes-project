@@ -30,47 +30,53 @@ def secretsmanager(aws_credentials):
 
 @pytest.fixture
 def create_secret(secretsmanager):
-    secretsmanager.create_secret(Name = 'MySecret', SecretString = '{"username":"username","password":"password"}')
+    secretsmanager.create_secret(
+        Name="MySecret", SecretString='{"username":"username","password":"password"}'
+    )
 
 
-def test_will_return_dictionary_containing_correct_values(secretsmanager, create_secret):
+def test_will_return_dictionary_containing_correct_values(
+    secretsmanager, create_secret
+):
     from src.ingestion import get_secret_value
 
-    secrets_dict = get_secret_value('MySecret')
-    assert secrets_dict == {'password': 'password', 'username': 'username'} 
+    secrets_dict = get_secret_value("MySecret")
+    assert secrets_dict == {"password": "password", "username": "username"}
 
 
-def test_will_throw_and_log_error_if_secret_name_not_found_in_secretsmanager(secretsmanager, create_secret, caplog):
+def test_will_throw_and_log_error_if_secret_name_not_found_in_secretsmanager(
+    secretsmanager, create_secret, caplog
+):
     from src.ingestion import get_secret_value
-
 
     with pytest.raises(botocore.errorfactory.ClientError):
-        get_secret_value('NotMySecret')
+        get_secret_value("NotMySecret")
 
     assert caplog.records[0].levelno == logging.CRITICAL
-    assert caplog.records[0].msg == 'The requested secret NotMySecret was not found'
+    assert caplog.records[0].msg == "The requested secret NotMySecret was not found"
 
 
-def test_will_throw_and_log_error_if_secret_name_incorrect_type(secretsmanager, create_secret, caplog):
+def test_will_throw_and_log_error_if_secret_name_incorrect_type(
+    secretsmanager, create_secret, caplog
+):
     from src.ingestion import get_secret_value
-
 
     with pytest.raises(be.ParamValidationError):
         get_secret_value(8)
 
     assert caplog.records[0].levelno == logging.CRITICAL
-    assert caplog.records[0].msg == 'The request has invalid params'
+    assert caplog.records[0].msg == "The request has invalid params"
 
 
 def test_logging_all_other_errors(caplog):
     import src.ingestion
 
-    with patch('src.ingestion.secrets.get_secret_value') as mock:
+    with patch("src.ingestion.secrets.get_secret_value") as mock:
         response_error = Exception
         mock.side_effect = response_error
 
         with pytest.raises(RuntimeError):
-            src.ingestion.get_secret_value('MySecret')
+            src.ingestion.get_secret_value("MySecret")
 
         assert caplog.records[0].levelno == logging.CRITICAL
 
@@ -80,75 +86,81 @@ def test_get_connection_raises_error_if_details_are_incorrect_and_logs_critial(c
     from src.ingestion import get_connection
 
     with pytest.raises(pge.InterfaceError):
-        get_connection(credentials='test')
-    
+        get_connection(credentials="test")
+
     assert caplog.records[0].levelno == logging.CRITICAL
 
 
 # Test SQL Helpers
 def test_get_keys_from_table_names_applies_correct_suffix():
     from src.ingestion import get_keys_from_table_names
-    
-    
-    result = get_keys_from_table_names(['table_1', 'table_2', 'table_3'])
-    assert result == ['table_1.csv', 'table_2.csv', 'table_3.csv']
+
+    result = get_keys_from_table_names(["table_1", "table_2", "table_3"])
+    assert result == ["table_1.csv", "table_2.csv", "table_3.csv"]
 
 
-@patch('src.ingestion.Connection')
+@patch("src.ingestion.Connection")
 def test_sql_select_column_headers_returns_column_headers_from_table(mock_connection):
     from src.ingestion import sql_select_column_headers
 
-
-    test_result = [{'name': 'col_1'}, {'name': 'col_2'}, {'name': 'col_3'}]
+    test_result = [{"name": "col_1"}, {"name": "col_2"}, {"name": "col_3"}]
     mock_connection().columns = test_result
-    assert sql_select_column_headers('test','table') == ['col_1', 'col_2', 'col_3']
+    assert sql_select_column_headers("test", "table") == ["col_1", "col_2", "col_3"]
 
 
-@patch('src.ingestion.sql_select_column_headers', return_value = ['col_1', 'col_2', 'col_3'])
-def test_collect_column_headers_colates_lists_returned_from_sql_select_column_headers(mock_sql):
+@patch(
+    "src.ingestion.sql_select_column_headers", return_value=["col_1", "col_2", "col_3"]
+)
+def test_collect_column_headers_colates_lists_returned_from_sql_select_column_headers(
+    mock_sql,
+):
     from src.ingestion import collect_column_headers
 
-    result = collect_column_headers('test', ['table_1', 'table_2'])
-    assert result == [['col_1', 'col_2', 'col_3'], ['col_1', 'col_2', 'col_3']]
+    result = collect_column_headers("test", ["table_1", "table_2"])
+    assert result == [["col_1", "col_2", "col_3"], ["col_1", "col_2", "col_3"]]
 
 
-@patch('src.ingestion.Connection')
+@patch("src.ingestion.Connection")
 def test_sql_select_query_returns_list_of_row_data_from_database(mock_connection):
     from src.ingestion import sql_select_query
 
-    test_result = [['Alex', 1], ['Rachael', 2], ['Joe', 3]]
+    test_result = [["Alex", 1], ["Rachael", 2], ["Joe", 3]]
     mock_connection().run.return_value = test_result
-    assert sql_select_query('test', 'table') == test_result
+    assert sql_select_query("test", "table") == test_result
 
 
-@patch('src.ingestion.Connection')
-def test_sql_select_updated_returns_true_if_database_has_been_updated_at_interval(mock_connection):
+@patch("src.ingestion.Connection")
+def test_sql_select_updated_returns_true_if_database_has_been_updated_at_interval(
+    mock_connection,
+):
     from src.ingestion import sql_select_updated
 
-    test_result = [['some data', 1]]
+    test_result = [["some data", 1]]
     mock_connection().run.return_value = test_result
-    assert sql_select_updated('test', 'table', '2 days') == True
+    assert sql_select_updated("test", "table", "2 days") == True
 
 
-@patch('src.ingestion.Connection')
-def test_sql_select_updated_returns_false_if_database_has_not_been_updated_at_interval(mock_connection):
+@patch("src.ingestion.Connection")
+def test_sql_select_updated_returns_false_if_database_has_not_been_updated_at_interval(
+    mock_connection,
+):
     from src.ingestion import sql_select_updated
 
     test_result = []
     mock_connection().run.return_value = test_result
-    assert sql_select_updated('test', 'table', '1 day') == False
+    assert sql_select_updated("test", "table", "1 day") == False
 
 
-@patch('src.ingestion.Connection')
-def test_sql_select_updated_raises_and_logs_database_error_if_table_not_in_database(mock_connection):
+@patch("src.ingestion.Connection")
+def test_sql_select_updated_raises_and_logs_database_error_if_table_not_in_database(
+    mock_connection,
+):
     import src.ingestion
-    
-    
-    table_names = ['table_1', 'table_2', 'table_3']
-    check_table = 'table'
-    with patch('src.ingestion.sql_select_updated') as mock:
+
+    table_names = ["table_1", "table_2", "table_3"]
+    check_table = "table"
+    with patch("src.ingestion.sql_select_updated") as mock:
         if check_table not in table_names:
             mock.side_effect = pge.DatabaseError
         with pytest.raises(pge.DatabaseError):
-            src.ingestion.sql_select_updated('test', 'table', '1 day')
-            
+            src.ingestion.sql_select_updated("test", "table", "1 day")
