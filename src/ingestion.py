@@ -19,8 +19,9 @@ secrets = boto3.client("secretsmanager")
 
 
 def lambda_handler(event, context):
-    """Handles functions to pull data from database and upload as a csv file to S3
-    Checks if the data exists on s3 and if the table has been updated since the last interval before uploading
+    """Handles functions to pull data from database and upload as a csv
+    file to S3 Checks if the data exists on s3 and if the table has been
+    updated since the last interval before uploading
     Args:
         event:
 
@@ -51,9 +52,11 @@ def lambda_handler(event, context):
         data_on_s3 = check_key_exists(BUCKET, bucket_keys[0])
         for index, table in enumerate(TABLES_LIST):
             if sql_select_updated(credentials, table, INTERVAL) or not data_on_s3:
+
                 data_to_bucket_csv_file(
                     credentials, table, columns[index], BUCKET, bucket_keys[index]
                 )
+
                 has_updated = True
         if has_updated:
             logger.info("SUCCESSFUL INGESTION")
@@ -99,7 +102,8 @@ def get_secret_value(secret_name: str) -> dict:
 def get_connection(credentials):
     """Attempts connection with database
     Args:
-        credentials: The credentials required to access the database stored in secretsmanager as a dictionary.
+        credentials: The credentials required to access the database
+        stored in secretsmanager as a dictionary.
     Returns:
         Connection class
     Raises:
@@ -132,7 +136,8 @@ def get_keys_from_table_names(tables, file_path=""):
     """Appends '.csv' to items in list.
     Args:
         tables: A list of table names.
-        file_path : Add a file path for a folder-like structure in S3. (OPTIONAL)
+        file_path : Add a file path for a folder-like structure in S3.
+        (OPTIONAL)
     Returns:
         A list of table names with appended file extension.
     """
@@ -142,7 +147,8 @@ def get_keys_from_table_names(tables, file_path=""):
 def sql_select_column_headers(credentials, table):
     """Queries database find column headers for a table.
     Args:
-        credentials: The credentials required to access the database stored in secretsmanager as a dictionary.
+        credentials: The credentials required to access the database
+        stored in secretsmanager as a dictionary.
         table: The name of a table.
     Returns:
         A list of column headers for that table.
@@ -165,7 +171,8 @@ def sql_select_column_headers(credentials, table):
 def collect_column_headers(credentials, tables):
     """Collects column headers from sql query into a list.
     Args:
-        credentials: The credentials required to access the database stored in secretsmanager as a dictionary.
+        credentials: The credentials required to access the database
+        stored in secretsmanager as a dictionary.
         table: A list of table names.
     Returns:
         A collection of nested lists containing all table headers.
@@ -179,7 +186,8 @@ def collect_column_headers(credentials, tables):
 def sql_select_query(credentials, table):
     """Queries database to select all data from a table.
     Args:
-        credentials: The credentials required to access the database stored in secretsmanager as a dictionary.
+        credentials: The credentials required to access the database
+        stored in secretsmanager as a dictionary.
         table: The name of the table to get data from.
     Returns:
         A collection of nested lists of row data
@@ -201,9 +209,11 @@ def sql_select_query(credentials, table):
 def sql_select_updated(credentials, table, interval):
     """Queries database to check a table has been updated since the last interval.
     Args:
-        credentials: The credentials required to access the database stored in secretsmanager as a dictionary.
+        credentials: The credentials required to access the database
+        stored in secretsmanager as a dictionary.
         table: The name of the table to get data from.
-        interval: The time between interval and now to check against the 'last_updated' column
+        interval: The time between interval and now to check against the
+        'last_updated' column
     Returns:
         A boolean for whether the table has been updated
     Raises:
@@ -213,7 +223,8 @@ def sql_select_updated(credentials, table, interval):
     conn = get_connection(credentials)
     try:
         updated = conn.run(
-            f"SELECT last_updated FROM {table} WHERE last_updated > now() - INTERVAL '{interval}' LIMIT 1;"
+            f"SELECT last_updated FROM {table} WHERE "
+            f"last_updated > now() - INTERVAL '{interval}' LIMIT 1;"
         )
         return True if len(updated) != 0 else False
     except pge.DatabaseError as e:
@@ -247,9 +258,11 @@ def data_to_bucket_csv_file(
         and uploads it to S3 as a csv file.
     Args:
         table_name: The name of the table to get data from.
-        column_headers: A collection of nested lists containing table headers.
+        column_headers: A collection of nested lists containing
+        table headers.
         bucket_name: The name of the bucket in S3.
-        bucket_key: The name of the file and path the data will be stored in.
+        bucket_key: The name of the file and path the data will
+        be stored in.
     Returns:
         Formated data as a list of dictionaries.
     Raises:
@@ -269,6 +282,7 @@ def data_to_bucket_csv_file(
         csv_buffer = StringIO()
         df.to_csv(csv_buffer)
         s3_resource.Object(bucket_name, bucket_key).put(Body=csv_buffer.getvalue())
+
         return rows_list
     except botocore.errorfactory.ClientError as e:
         if e.response["Error"]["Code"] == "NoSuchBucket":
