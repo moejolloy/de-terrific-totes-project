@@ -84,14 +84,13 @@ def test_logging_all_other_errors(caplog):
 
 
 # Test Get Connection
-def test_get_connection_raises_error_if_details_are_incorrect_and_logs_critial(
-    caplog):
-        from src.ingestion import get_connection
+def test_get_connection_raises_error_if_details_are_incorrect(caplog):
+    from src.ingestion import get_connection
 
-        with pytest.raises(pge.InterfaceError):
-            get_connection(credentials="test")
+    with pytest.raises(pge.InterfaceError):
+        get_connection(credentials="test")
 
-        assert caplog.records[0].levelno == logging.CRITICAL
+    assert caplog.records[0].levelno == logging.CRITICAL
 
 
 # Test SQL Helpers
@@ -142,7 +141,8 @@ def test_select_updated_returns_true_if_database_has_been_updated_at_interval(
     test_result = [["some data", 1]]
     mock_connection().run.return_value = test_result
     assert sql_select_updated("test", "table", "2 days")
-    #works with assert sql_select_updated("test", "table", "2 days") == True
+#works with assert sql_select_updated("test", "table", "2 days") == True
+
 
 @patch("src.ingestion.Connection")
 def test_select_updated_returns_false_if_database_is_not_updated_at_interval(
@@ -153,7 +153,7 @@ def test_select_updated_returns_false_if_database_is_not_updated_at_interval(
     test_result = []
     mock_connection().run.return_value = test_result
     assert not sql_select_updated("test", "table", "1 day")
-    #works with assert sql_select_updated("test", "table", "1 day") == False
+#works with assert sql_select_updated("test", "table", "1 day") == False
 
 
 @patch("src.ingestion.Connection")

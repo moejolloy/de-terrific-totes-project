@@ -8,7 +8,7 @@ import pytest
 import logging
 
 
-def test_load_csv_from_s3_reads_csv_file_from_s3_bucket_and_returns_dataframe():
+def test_load_csv_from_s3_reads_csv_file_from_s3_and_returns_dataframe():
     with patch('src.utils.s3.get_object') as mock:
         read_file = b'ID\n1\n2'
         body = StreamingBody(io.BytesIO(read_file), len(read_file))
@@ -19,7 +19,7 @@ def test_load_csv_from_s3_reads_csv_file_from_s3_bucket_and_returns_dataframe():
         assert src.utils.load_csv_from_s3("", "").equals(df)
 
 
-def test_load_csv_from_s3_reads_more_complex_csv_file_from_s3_bucket_and_returns_dataframe():
+def test_load_csv_from_s3_reads_more_complex_csv_file_from_s3():
     with patch('src.utils.s3.get_object') as mock:
         read_file = b'ID,Name,Age\n1,Sam,31\n2,Joe,14\n3,Max,44'
         body = StreamingBody(io.BytesIO(read_file), len(read_file))
@@ -84,7 +84,7 @@ def test_logging_NoSuchKey_error(caplog):
         assert caplog.records[0].msg == "Key not found in bucket"
 
 
-def test_logging_other_errors(caplog):
+def test_logging_other_errors_get_object(caplog):
     with patch('src.utils.s3.get_object') as mock:
         response_error = Exception
         mock.side_effect = response_error
@@ -152,10 +152,11 @@ def test_logging_AttributeError(caplog):
         with pytest.raises(AttributeError):
             src.utils.export_parquet_to_s3(pd.DataFrame, '', '')
         assert caplog.records[0].levelno == logging.CRITICAL
-        assert caplog.records[0].msg == "Object passed to the function is not of type DataFrame."
+        assert caplog.records[0].msg == "Object passed to the function is"
+        + "not of type DataFrame."
 
 
-def test_logging_other_errors(caplog):
+def test_logging_other_errors_to_parquest(caplog):
     with patch('src.utils.pd.DataFrame.to_parquet') as mock:
         response_error = RuntimeError
         mock.side_effect = response_error
