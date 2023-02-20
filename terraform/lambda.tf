@@ -20,7 +20,7 @@ resource "aws_lambda_function" "ingestion_lambda" {
   role          = aws_iam_role.ingest-lambda-role.arn
   handler       = "ingestion.lambda_handler"
   runtime       = "python3.9"
-  layers        = [aws_lambda_layer_version.dependencies_layer.arn]
+  layers        = [aws_lambda_layer_version.pandas_layer.arn, aws_lambda_layer_version.other_dependencies_layer.arn]
 }
 
 resource "aws_lambda_permission" "allow_eventbridge_ingestion_lambda" {
@@ -48,10 +48,15 @@ resource "aws_lambda_function" "processing_lambda" {
   role          = aws_iam_role.processed-lambda-role.arn
   handler       = "transformation.transform_data"
   runtime       = "python3.9"
-  layers        = [aws_lambda_layer_version.dependencies_layer.arn]
+  layers        = [aws_lambda_layer_version.pandas_layer.arn, aws_lambda_layer_version.other_dependencies_layer.arn]
 }
 
-resource "aws_lambda_layer_version" "dependencies_layer" {
-  filename   = "${path.module}/../zips/dependencies.zip"
-  layer_name = "dependencies_layer"
+resource "aws_lambda_layer_version" "pandas_layer" {
+  filename   = "${path.module}/../zips/pandas.zip"
+  layer_name = "pandas_layer"
+}
+
+resource "aws_lambda_layer_version" "other_dependencies_layer" {
+  filename   = "${path.module}/../zips/other_dependencies.zip"
+  layer_name = "other_dependencies_layer"
 }

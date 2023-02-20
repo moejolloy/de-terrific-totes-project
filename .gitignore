@@ -11,4 +11,5 @@ crash.log
 # venv
 venv/
 
-zips/dependencies/*
+zips/dependenciesother/*
+zips/dependenciespanda/*
