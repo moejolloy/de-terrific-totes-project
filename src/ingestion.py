@@ -47,10 +47,8 @@ def lambda_handler(event, context):
                 has_updated = True
         if has_updated:
             logger.info('SUCCESSFUL INGESTION')
-            print('SUCCESSFUL INGESTION')
         else:
             logger.info('NO FILES TO UPDATE')
-            print('NO FILES TO UPDATE')
     except Exception as e:
         logger.critical(e)
         raise RuntimeError
