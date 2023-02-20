@@ -52,7 +52,7 @@ def lambda_handler(event, context):
         data_on_s3 = check_key_exists(BUCKET, bucket_keys[0])
         for index, table in enumerate(TABLES_LIST):
             if sql_select_updated(credentials, table,
-            INTERVAL) or not data_on_s3:
+                INTERVAL) or not data_on_s3:
 
                 data_to_bucket_csv_file(
                     credentials, table, columns[index], BUCKET,
@@ -126,7 +126,7 @@ def get_connection(credentials):
         PASS = "TestPassword"
     try:
         return Connection(USER, password=PASS, database=DATABASE, host=HOST,
-        port=PORT)
+            port=PORT)
     except pge.InterfaceError as e:
         logger.critical(e)
         raise e
@@ -183,7 +183,7 @@ def collect_column_headers(credentials, tables):
     table_headers_list = []
     for table in tables:
         table_headers_list.append(sql_select_column_headers(credentials,
-        table))
+            table))
 
     return table_headers_list
 
@@ -251,7 +251,7 @@ def check_key_exists(bucket_name, bucket_key):
         A boolean for whether the key exists
     """
     try:
-        meta_data = s3_client.head_object(Bucket=bucket_name, Key=bucket_key)
+        s3_client.head_object(Bucket=bucket_name, Key=bucket_key)
         return True
     except botocore.exceptions.ClientError as e:
         if e.response["Error"]["Code"] == "NoSuchKey":
