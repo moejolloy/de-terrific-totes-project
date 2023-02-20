@@ -12,3 +12,4 @@ crash.log
 
 /venv
 
+*/__pycache__/
