@@ -151,9 +151,9 @@ def test_logging_AttributeError(caplog):
         mock.side_effect = response_error
         with pytest.raises(AttributeError):
             src.utils.export_parquet_to_s3(pd.DataFrame, '', '')
+        expected = "Object passed to the function is not of type DataFrame."
         assert caplog.records[0].levelno == logging.CRITICAL
-        assert caplog.records[0].msg == "Object passed to the function is "
-        + "not of type DataFrame."
+        assert caplog.records[0].msg == expected
 
 
 def test_logging_other_errors_to_parquest(caplog):

@@ -52,10 +52,9 @@ def test_will_throw_and_log_error_if_secret_name_not_found_in_secretsmanager(
 
     with pytest.raises(botocore.errorfactory.ClientError):
         get_secret_value("NotMySecret")
-
+    expected = "The requested secret NotMySecret was not found"
     assert caplog.records[0].levelno == logging.CRITICAL
-    assert caplog.records[0].msg == "The requested secret NotMySecret was "
-    + "not found"
+    assert caplog.records[0].msg == expected
 
 
 def test_will_throw_and_log_error_if_secret_name_incorrect_type(
