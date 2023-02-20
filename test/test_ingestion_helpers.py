@@ -141,19 +141,19 @@ def test_select_updated_returns_true_if_database_has_been_updated_at_interval(
     test_result = [["some data", 1]]
     mock_connection().run.return_value = test_result
     assert sql_select_updated("test", "table", "2 days")
-#works with assert sql_select_updated("test", "table", "2 days") == True
+# works with assert sql_select_updated("test", "table", "2 days") == True
 
 
 @patch("src.ingestion.Connection")
 def test_select_updated_returns_false_if_database_is_not_updated_at_interval(
-    mock_connection,
+    mock_connection
 ):
     from src.ingestion import sql_select_updated
 
     test_result = []
     mock_connection().run.return_value = test_result
     assert not sql_select_updated("test", "table", "1 day")
-#works with assert sql_select_updated("test", "table", "1 day") == False
+# works with assert sql_select_updated("test", "table", "1 day") == False
 
 
 @patch("src.ingestion.Connection")
