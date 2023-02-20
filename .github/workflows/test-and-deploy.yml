@@ -4,9 +4,9 @@ on:
   push:
     branches: 
       - Github-actions-31
-  # merge or pullrequest complete, look up:
-  #   branches: 
-  #     - main
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       environment:
