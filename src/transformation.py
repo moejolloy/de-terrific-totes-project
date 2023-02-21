@@ -1,6 +1,6 @@
 import pandas as pd
 import logging
-from src.utils import load_csv_from_s3, export_parquet_to_s3
+from utils import load_csv_from_s3, export_parquet_to_s3
 
 logger = logging.getLogger("processing")
 logger.setLevel(logging.INFO)
@@ -20,10 +20,10 @@ def transform_data(event, context):
         a dictionary with keys of the files to be uploaded
         values True if file successfully processed, else None.
     """
-    bucket = "nc-marie-c-demo"
-    processed_bucket = "nc-marie-c-processed"
+    bucket = "terrific-totes-ingest-bucket-4"
+    processed_bucket = "terrific-totes-processed-bucket-4"
 
-    files_list = ["staff.csv", "departments.csv", "address.csv",
+    files_list = ["staff.csv", "department.csv", "address.csv",
                   "design.csv", "counterparty.csv", "currency.csv"]
     try:
         df_list = [load_csv_from_s3(

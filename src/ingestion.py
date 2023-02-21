@@ -101,18 +101,13 @@ def get_connection(credentials):
         InterfaceError
         RuntimeError
     """
-    if __name__ == "__main__":
-        HOST = credentials["host"]
-        PORT = credentials["port"]
-        USER = credentials["user"]
-        PASS = credentials["password"]
-        DATABASE = credentials["database"]
-    else:
-        HOST = "TestHost"
-        PORT = 1234
-        DATABASE = "TestDB"
-        USER = "TestUser"
-        PASS = "TestPassword"
+    
+    HOST = credentials["host"]
+    PORT = credentials["port"]
+    USER = credentials["user"]
+    PASS = credentials["password"]
+    DATABASE = credentials["database"]
+    
     try:
         return Connection(USER, password=PASS, database=DATABASE, host=HOST,
                           port=PORT)
@@ -166,8 +161,9 @@ def collect_column_headers(credentials, tables):
     """
     table_headers_list = []
     for table in tables:
-        table_headers_list.append(sql_select_column_headers(credentials,
-                                                            table))
+        column_header = sql_select_column_headers(credentials,table)
+        logging.info(column_header)
+        table_headers_list.append(column_header)
 
     return table_headers_list
 
