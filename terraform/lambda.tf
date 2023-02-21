@@ -15,12 +15,14 @@ resource "aws_lambda_permission" "allow_s3_dummy_file_reader" {
 }
 
 resource "aws_lambda_function" "ingestion_lambda" {
-  filename      = "${path.module}/../zips/ingestion.zip"
-  function_name = var.ingestion_lambda_name
-  role          = aws_iam_role.ingest-lambda-role.arn
-  handler       = "ingestion.tbc"
-  # handler name to be confirmed ^^
-  runtime = "python3.9"
+  filename         = data.archive_file.ingestion_lambda_zipper.output_path
+  source_code_hash = data.archive_file.ingestion_lambda_zipper.output_base64sha256
+  function_name    = var.ingestion_lambda_name
+  role             = aws_iam_role.ingest-lambda-role.arn
+  handler          = "ingestion.lambda_handler"
+  runtime          = "python3.9"
+  layers           = ["arn:aws:lambda:us-east-1:336392948345:layer:AWSSDKPandas-Python39:3"]
+
 }
 
 resource "aws_lambda_permission" "allow_eventbridge_ingestion_lambda" {
@@ -43,10 +45,12 @@ resource "aws_cloudwatch_event_target" "ingestion_lambda_target" {
 }
 
 resource "aws_lambda_function" "processing_lambda" {
-  filename      = "${path.module}/../zips/transformation.zip"
-  function_name = var.processing_lambda_name
-  role          = aws_iam_role.processed-lambda-role.arn
-  handler       = "transformation.tbc"
-  # handler name to be confirmed ^^
-  runtime = "python3.9"
+  filename         = data.archive_file.processing_lambda_zipper.output_path
+  source_code_hash = data.archive_file.processing_lambda_zipper.output_base64sha256
+  function_name    = var.processing_lambda_name
+  role             = aws_iam_role.processed-lambda-role.arn
+  handler          = "transformation.transform_data"
+  runtime          = "python3.9"
+  layers           = ["arn:aws:lambda:us-east-1:336392948345:layer:AWSSDKPandas-Python39:3"]
 }
+

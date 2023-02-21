@@ -26,6 +26,5 @@ variable "population_lambda_name" {
 
 variable "database_info" {
   description = "placeholder for sensitive database credentials"
-  type = string
-  sensitive = true
+  sensitive   = true
 }

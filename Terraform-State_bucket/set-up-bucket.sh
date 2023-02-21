@@ -1,3 +1,3 @@
 #!/bin/bash
 
-aws s3 mb s3://terraform-state-bucket-totedd-1702
+aws s3 mb s3://terraform-state-bucket-totedd-1705

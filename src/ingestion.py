@@ -29,22 +29,13 @@ def lambda_handler(event, context):
 
     Raises:
     """
-    credentials = get_secret_value("database_credentials")
-    TABLES_LIST = [
-        "staff",
-        "transaction",
-        "design",
-        "address",
-        "sales_order",
-        "counterparty",
-        "payment",
-        "payment_type",
-        "currency",
-        "department",
-        "purchase_order",
-    ]
-    BUCKET = ""  # INSERT BUCKET NAME HERE
-    INTERVAL = "30 minutes"
+    credentials = get_secret_value('database_credentials')
+    TABLES_LIST = ['staff', 'transaction', 'design', 'address', 
+                    'sales_order', 'counterparty', 'payment', 
+                    'payment_type', 'currency', 'department', 
+                    'purchase_order']
+    BUCKET = 'terrific-totes-ingest-bucket-1' # INSERT BUCKET NAME HERE
+    INTERVAL = '30 minutes'
     has_updated = False
     columns = collect_column_headers(credentials, TABLES_LIST)
     bucket_keys = get_keys_from_table_names(TABLES_LIST)
@@ -65,8 +56,9 @@ def lambda_handler(event, context):
         logger.info("NO FILES TO UPDATE")
 
 
-def get_secret_value(secret_name):
-    """Finds data for a specified secret on SecretsManager
+def get_secret_value(secret_name: str) -> dict:
+    """Finds data for a specified secret on SecretsManager.
+
     Args:
         secret_id: The Secret Name that holds the username and password
                     for your data base
