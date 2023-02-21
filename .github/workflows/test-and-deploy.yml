@@ -22,7 +22,7 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v3.3.0
         with:
-          ref: Github-actions-31
+          ref: processing-python-func-t7
       - name: Use Python
         uses: actions/setup-python@v4.5.0
         with: 
