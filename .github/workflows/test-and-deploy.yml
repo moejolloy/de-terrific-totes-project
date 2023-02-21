@@ -1,9 +1,7 @@
 name: Test and Deploy
 
 on:
-  # push:
-  #   branches: 
-  #     - add branch name here
+  push:
   pull_request:
     branches:
       - main
@@ -20,11 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v2
-        with:
-          ref: Github-actions-31
+        uses: actions/checkout@v3.3.0
       - name: Use Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4.5.0
         with: 
           python-version: "3.9"
       - name: Install make

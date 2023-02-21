@@ -8,5 +8,9 @@
 # Crash log files
 crash.log
 
+
+*/__pycache__/
+
 # venv
 venv/
+/venv

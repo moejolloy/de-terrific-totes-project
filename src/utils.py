@@ -9,12 +9,14 @@ logger.setLevel(logging.INFO)
 s3 = boto3.client('s3')
 
 
-def load_csv_from_s3(bucket, key):
+def load_csv_from_s3(bucket, key, parse_dates=[]):
     """ Retrieve a CSV file from an S3 bucket
 
     Args:
         bucket: Name of the S3 bucket from which to retrieve the file.
         key: Key that the file is stored under in the named S3 bucket.
+        parse_dates: a list of column names which contain
+                     dates to be converted to datetime objects.
 
     Returns:
         DataFrame containing the contents of the CSV file.
@@ -23,7 +25,7 @@ def load_csv_from_s3(bucket, key):
         s3_response_object = s3.get_object(
             Bucket=bucket, Key=key)
         df = s3_response_object['Body'].read()
-        df = pd.read_csv(BytesIO(df))
+        df = pd.read_csv(BytesIO(df), parse_dates=parse_dates)
         return df
     except s3.exceptions.NoSuchBucket:
         logger.critical('Bucket does not exist')
