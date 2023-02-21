@@ -30,11 +30,11 @@ def lambda_handler(event, context):
     Raises:
     """
     credentials = get_secret_value('database_credentials')
-    TABLES_LIST = ['staff', 'transaction', 'design', 'address', 
-                    'sales_order', 'counterparty', 'payment', 
-                    'payment_type', 'currency', 'department', 
-                    'purchase_order']
-    BUCKET = 'terrific-totes-ingest-bucket-1' # INSERT BUCKET NAME HERE
+    TABLES_LIST = ['staff', 'transaction', 'design', 'address',
+                   'sales_order', 'counterparty', 'payment',
+                   'payment_type', 'currency', 'department',
+                   'purchase_order']
+    BUCKET = 'terrific-totes-ingest-bucket-4'  # INSERT BUCKET NAME HERE
     INTERVAL = '30 minutes'
     has_updated = False
     columns = collect_column_headers(credentials, TABLES_LIST)
