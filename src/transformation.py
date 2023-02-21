@@ -211,4 +211,3 @@ def format_fact_sales_order(sales_order_df):
         "agreed_delivery_location_id"
     ]]
     return fact_sales_order
-    
