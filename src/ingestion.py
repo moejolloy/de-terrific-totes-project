@@ -46,30 +46,26 @@ def lambda_handler(event, context):
     BUCKET = ""  # INSERT BUCKET NAME HERE
     INTERVAL = "30 minutes"
     has_updated = False
-    try:
-        columns = collect_column_headers(credentials, TABLES_LIST)
-        bucket_keys = get_keys_from_table_names(TABLES_LIST)
-        data_on_s3 = check_key_exists(BUCKET, bucket_keys[0])
-        for index, table in enumerate(TABLES_LIST):
-            if sql_select_updated(credentials, table,
-                                  INTERVAL) or not data_on_s3:
+    columns = collect_column_headers(credentials, TABLES_LIST)
+    bucket_keys = get_keys_from_table_names(TABLES_LIST)
+    data_on_s3 = check_key_exists(BUCKET, bucket_keys[0])
+    for index, table in enumerate(TABLES_LIST):
+        if sql_select_updated(credentials, table,
+                              INTERVAL) or not data_on_s3:
 
-                data_to_bucket_csv_file(
-                    credentials, table, columns[index], BUCKET,
-                    bucket_keys[index]
-                )
+            data_to_bucket_csv_file(
+                credentials, table, columns[index], BUCKET,
+                bucket_keys[index]
+            )
 
-                has_updated = True
-        if has_updated:
-            logger.info("SUCCESSFUL INGESTION")
-        else:
-            logger.info("NO FILES TO UPDATE")
-    except Exception as e:
-        logger.critical(e)
-        raise RuntimeError
+            has_updated = True
+    if has_updated:
+        logger.info("SUCCESSFUL INGESTION")
+    else:
+        logger.info("NO FILES TO UPDATE")
 
 
-def get_secret_value(secret_name: str) -> dict:
+def get_secret_value(secret_name):
     """Finds data for a specified secret on SecretsManager
     Args:
         secret_id: The Secret Name that holds the username and password
@@ -84,8 +80,6 @@ def get_secret_value(secret_name: str) -> dict:
     """
     try:
         secret_value = secrets.get_secret_value(SecretId=secret_name)
-        secrets_dict = json.loads(secret_value["SecretString"])
-        return secrets_dict
     except secrets.exceptions.ResourceNotFoundException as e:
         logger.critical(f"The requested secret {secret_name} was not found")
         raise e
@@ -99,6 +93,9 @@ def get_secret_value(secret_name: str) -> dict:
     except Exception as e:
         logger.critical(e)
         raise RuntimeError
+    else:
+        secrets_dict = json.loads(secret_value["SecretString"])
+        return secrets_dict
 
 
 def get_connection(credentials):
@@ -130,9 +127,6 @@ def get_connection(credentials):
     except pge.InterfaceError as e:
         logger.critical(e)
         raise e
-    except Exception as e:
-        logger.critial(e)
-        raise RuntimeError
 
 
 def get_keys_from_table_names(tables, file_path=""):
@@ -162,13 +156,11 @@ def sql_select_column_headers(credentials, table):
     conn = get_connection(credentials)
     try:
         conn.run(f"SELECT * FROM {table} LIMIT 0;")
-        return [column["name"] for column in conn.columns]
     except pge.DatabaseError as e:
         logger.critical(f"DatabaseError: {table} does not exist in database")
         raise e
-    except Exception as e:
-        logger.critical(e)
-        raise RuntimeError
+    else:
+        return [column['name'] for column in conn.columns]
 
 
 def collect_column_headers(credentials, tables):
@@ -200,15 +192,12 @@ def sql_select_query(credentials, table):
         DatabaseError
         RuntimeError
     """
+    conn = get_connection(credentials)
     try:
-        conn = get_connection(credentials)
         return conn.run(f"SELECT * FROM {table};")
     except pge.DatabaseError as e:
         logger.critical(f"DatabaseError: {table} does not exist in database")
         raise e
-    except Exception as e:
-        logger.critical(e)
-        raise RuntimeError
 
 
 def sql_select_updated(credentials, table, interval):
@@ -233,13 +222,11 @@ def sql_select_updated(credentials, table, interval):
             f"SELECT last_updated FROM {table} WHERE "
             f"last_updated > now() - INTERVAL '{interval}' LIMIT 1;"
         )
-        return True if len(updated) != 0 else False
     except pge.DatabaseError as e:
         logger.critical(f"DatabaseError: {table} does not exist in database")
         raise e
-    except Exception as e:
-        logger.critical(e)
-        raise RuntimeError
+    else:
+        return True if len(updated) != 0 else False
 
 
 def check_key_exists(bucket_name, bucket_key):
@@ -252,10 +239,11 @@ def check_key_exists(bucket_name, bucket_key):
     """
     try:
         s3_client.head_object(Bucket=bucket_name, Key=bucket_key)
-        return True
     except botocore.exceptions.ClientError as e:
-        if e.response["Error"]["Code"] == "NoSuchKey":
+        if e.response["Error"]["Code"] == "404":
             return False
+    else:
+        return True
 
 
 def data_to_bucket_csv_file(
@@ -277,21 +265,20 @@ def data_to_bucket_csv_file(
         ParamValidationError
         RuntimeError
     """
+    data_from_table = sql_select_query(credentials, table_name)
+    rows_list = []
+    for row in data_from_table:
+        row_data_dict = {}
+        for index, column in enumerate(column_headers):
+            row_data_dict[column] = row[index]
+        rows_list.append(row_data_dict)
+    df = pd.DataFrame(data=rows_list, columns=column_headers)
+    csv_buffer = StringIO()
+    df.to_csv(csv_buffer)
+
     try:
-        data_from_table = sql_select_query(credentials, table_name)
-        rows_list = []
-        for row in data_from_table:
-            row_data_dict = {}
-            for index, column in enumerate(column_headers):
-                row_data_dict[column] = row[index]
-            rows_list.append(row_data_dict)
-        df = pd.DataFrame(data=rows_list, columns=column_headers)
-        csv_buffer = StringIO()
-        df.to_csv(csv_buffer)
         s3_resource.Object(bucket_name, bucket_key).put(
             Body=csv_buffer.getvalue())
-
-        return rows_list
     except botocore.errorfactory.ClientError as e:
         if e.response["Error"]["Code"] == "NoSuchBucket":
             logger.critical(f"{bucket_name} does not exist in your S3")
@@ -299,6 +286,5 @@ def data_to_bucket_csv_file(
     except botocore.exceptions.ParamValidationError as e:
         logger.critical("The request has invalid params")
         raise e
-    except Exception as e:
-        logger.critical(e)
-        raise RuntimeError
+    else:
+        return rows_list
