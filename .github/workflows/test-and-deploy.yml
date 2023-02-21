@@ -2,8 +2,6 @@ name: Test and Deploy
 
 on:
   push:
-    branches: 
-      - processing-python-func-t7
   pull_request:
     branches:
       - main
@@ -21,8 +19,6 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v3.3.0
-        with:
-          ref: processing-python-func-t7
       - name: Use Python
         uses: actions/setup-python@v4.5.0
         with: 
