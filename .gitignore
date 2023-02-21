@@ -11,5 +11,9 @@ crash.log
 # venv
 venv/
 
-zips/layer1/*
-zips/layer2/*
+#database credentials
+*.tfvars
+
+#dependencies for zipping
+zips/ingestion_files/*
+zips/processing_files/*

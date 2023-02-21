@@ -14,14 +14,16 @@ data "archive_file" "dummy_lambda_zipper" {
 
 data "archive_file" "ingestion_lambda_zipper" {
   type        = "zip"
-  source_file = "${path.module}/../src/ingestion.py"
+  source_dir  = "${path.module}/../zips/ingestion_files"
   output_path = "${path.module}/../zips/ingestion.zip"
+  depends_on  = [null_resource.pip_install_ingestion_dependencies, null_resource.copy_ingestion_file_for_zipping]
 }
 
 data "archive_file" "processing_lambda_zipper" {
   type        = "zip"
-  source_file = "${path.module}/../src/transformation.py"
+  source_dir  = "${path.module}/../zips/processing_files"
   output_path = "${path.module}/../zips/transformation.zip"
+  depends_on  = [null_resource.pip_install_processing_dependencies, null_resource.copy_processing_file_for_zipping]
 }
 
 data "archive_file" "population_lambda_zipper" {
@@ -30,36 +32,42 @@ data "archive_file" "population_lambda_zipper" {
   output_path = "${path.module}/../zips/population.zip"
 }
 
-resource "null_resource" "pip_install_layer_1" {
+resource "null_resource" "pip_install_ingestion_dependencies" {
   triggers = {
-    shell_hash = "${sha256(file("${path.module}/../layer1.txt"))}"
+    shell_hash = "${sha256(file("${path.module}/../ingestion_dependencies.txt"))}"
   }
 
   provisioner "local-exec" {
-    command = "pip install -r ../layer1.txt -t ${path.module}/../zips/layer1"
+    command = "pip install -r ../ingestion_dependencies.txt -t ${path.module}/../zips/ingestion_files"
   }
 }
 
-resource "null_resource" "pip_install_layer_2" {
+resource "null_resource" "copy_ingestion_file_for_zipping" {
   triggers = {
-    shell_hash = "${sha256(file("${path.module}/../layer2.txt"))}"
+    shell_hash = "${sha256(file("${path.module}/../src/ingestion.py"))}"
   }
 
   provisioner "local-exec" {
-    command = "pip install -r ../layer2.txt -t ${path.module}/../zips/layer2"
+    command = "cp ../src/ingestion.py ${path.module}/../zips/ingestion_files"
   }
 }
 
-data "archive_file" "layer_1_zipper" {
-  type        = "zip"
-  source_dir  = "${path.module}/../zips/layer1"
-  output_path = "${path.module}/../zips/layer_1.zip"
-  depends_on  = [null_resource.pip_install_layer_1]
+resource "null_resource" "pip_install_processing_dependencies" {
+  triggers = {
+    shell_hash = "${sha256(file("${path.module}/../processing_dependencies.txt"))}"
+  }
+
+  provisioner "local-exec" {
+    command = "pip install -r ../processing_dependencies.txt -t ${path.module}/../zips/processing_files"
+  }
 }
 
-data "archive_file" "layer_2_zipper" {
-  type        = "zip"
-  source_dir  = "${path.module}/../zips/layer2"
-  output_path = "${path.module}/../zips/layer_2.zip"
-  depends_on  = [null_resource.pip_install_layer_2]
+resource "null_resource" "copy_processing_file_for_zipping" {
+  triggers = {
+    shell_hash = "${sha256(file("${path.module}/../src/transformation.py"))}"
+  }
+
+  provisioner "local-exec" {
+    command = "cp ../src/transformation.py ${path.module}/../zips/processing_files"
+  }
 }

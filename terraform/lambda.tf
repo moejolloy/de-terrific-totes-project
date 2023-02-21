@@ -21,7 +21,8 @@ resource "aws_lambda_function" "ingestion_lambda" {
   role             = aws_iam_role.ingest-lambda-role.arn
   handler          = "ingestion.lambda_handler"
   runtime          = "python3.9"
-  layers           = [aws_lambda_layer_version.layer_1.arn, aws_lambda_layer_version.layer_2.arn]
+  layers           = ["arn:aws:lambda:us-east-1:336392948345:layer:AWSSDKPandas-Python39:3"]
+
 }
 
 resource "aws_lambda_permission" "allow_eventbridge_ingestion_lambda" {
@@ -44,25 +45,12 @@ resource "aws_cloudwatch_event_target" "ingestion_lambda_target" {
 }
 
 resource "aws_lambda_function" "processing_lambda" {
-  filename         = data.archive_file.ingestion_lambda_zipper.output_path
+  filename         = data.archive_file.processing_lambda_zipper.output_path
   source_code_hash = data.archive_file.processing_lambda_zipper.output_base64sha256
   function_name    = var.processing_lambda_name
   role             = aws_iam_role.processed-lambda-role.arn
   handler          = "transformation.transform_data"
   runtime          = "python3.9"
-  layers           = [aws_lambda_layer_version.layer_1.arn, aws_lambda_layer_version.layer_2.arn]
+  layers           = ["arn:aws:lambda:us-east-1:336392948345:layer:AWSSDKPandas-Python39:3"]
 }
 
-resource "aws_lambda_layer_version" "layer_1" {
-  filename            = data.archive_file.layer_1_zipper.output_path
-  layer_name          = "layer_1"
-  source_code_hash    = data.archive_file.layer_1_zipper.output_base64sha256
-  compatible_runtimes = ["python3.9"]
-}
-
-resource "aws_lambda_layer_version" "layer_2" {
-  filename            = data.archive_file.layer_2_zipper.output_path
-  layer_name          = "layer_2"
-  source_code_hash    = data.archive_file.layer_2_zipper.output_base64sha256
-  compatible_runtimes = ["python3.9"]
-}

@@ -18,6 +18,8 @@ For error subscriptions, python errors or exceptions should name the error raise
         logger.error(
             f'InvalidFileTypeError {s3_object_name} is not a valid text file')
 
+When initialising Terraform please use 'terraform init -reconfigure' command instead of terraform init without argument. This sets up terraform correctly, and reconfigures the backend each time.
+
 NOTE: as of 15/02, ingestion.py prints Great Success every 2 minutes using a dummy handler function that will be overwritten during a merge. After merge, it should run the real ingestion handler every two minutes triggered via cloud_watch_events_bridge
 
 NOTE: the database credentials are stored locally in a .tfvars file and gitignored. Get secret.tfvars file from colleague and run 'terraform apply -var-file="secret.tfvars"' command.
