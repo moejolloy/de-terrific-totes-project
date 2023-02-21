@@ -1,1 +1,0 @@
-database_info = "{ \"host\" : \"nc-data-eng-totesys-production.chpsczt8h1nu.eu-west-2.rds.amazonaws.com\", \"port\" : \"5432\", \"database\" : \"totesys\", \"user\" : \"project_user_4\", \"password\" : \"ZUr7UMAkA3mPQgrQ2jckFDfa\" }"
