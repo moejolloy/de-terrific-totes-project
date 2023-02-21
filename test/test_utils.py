@@ -8,7 +8,6 @@ import pytest
 import logging
 
 
-
 def test_load_csv_from_s3_reads_file_from_bucket_and_returns_dataframe():
     with patch('src.utils.s3.get_object') as mock:
         read_file = b'ID\n1\n2'
@@ -86,7 +85,6 @@ def test_logging_NoSuchKey_error(caplog):
         assert caplog.records[0].msg == "Key not found in bucket"
 
 
-
 def test_logging_other_errors_load(caplog):
     with patch('src.utils.s3.get_object') as mock:
         response_error = Exception
@@ -156,8 +154,7 @@ def test_logging_AttributeError(caplog):
             src.utils.export_parquet_to_s3(pd.DataFrame, '', '')
         expected = "Object passed to the function is not of type DataFrame."
         assert caplog.records[0].levelno == logging.CRITICAL
-        assert caplog.records[0].msg == "Object passed to the "\
-            "function is not of type DataFrame."
+        assert caplog.records[0].msg == expected
 
 
 def test_logging_other_errors_export(caplog):
