@@ -21,7 +21,7 @@ secrets = boto3.client("secretsmanager")
 def lambda_handler(event, context):
     """Handles functions to pull data from database and upload as a csv
     file to S3 Checks if the data exists on s3 and if the table has been
-    updated since the last interval before uploading
+    updated since the last interval before uploading.
     Args:
         event:
 
