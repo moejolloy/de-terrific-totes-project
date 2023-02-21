@@ -1,5 +1,5 @@
 import boto3
-from moto import mock_secretsmanager
+from moto import mock_secretsmanager, mock_s3
 from unittest.mock import patch
 import pytest
 import os
@@ -113,6 +113,22 @@ def test_sql_select_column_headers_returns_column_headers(mock_connection):
     assert sql_select_column_headers("test", "table") == columns123
 
 
+@patch("src.ingestion.Connection")
+def test_select_column_headers_logs_error_if_table_does_not_exist(
+    mock_connection, caplog
+):
+    from src.ingestion import sql_select_column_headers
+
+    mock_connection().run.side_effect = pge.DatabaseError
+
+    with pytest.raises(pge.DatabaseError):
+        sql_select_column_headers('', 'test')
+
+    assert caplog.records[0].levelno == logging.CRITICAL
+    assert caplog.records[0].msg == (
+        "DatabaseError: test does not exist in database")
+
+
 @patch(
     "src.ingestion.sql_select_column_headers", return_value=columns123)
 def test_collect_column_headers_colates_lists_returned_from_sql(mock_sql):
@@ -129,6 +145,22 @@ def test_select_query_returns_list_of_row_data_from_database(mock_connection):
     test_result = [["Alex", 1], ["Rachael", 2], ["Joe", 3]]
     mock_connection().run.return_value = test_result
     assert sql_select_query("test", "table") == test_result
+
+
+@patch("src.ingestion.Connection")
+def test_select_query_logs_error_if_table_does_not_exist(
+    mock_connection, caplog
+):
+    from src.ingestion import sql_select_query
+
+    mock_connection().run.side_effect = pge.DatabaseError
+
+    with pytest.raises(pge.DatabaseError):
+        sql_select_query('', 'test')
+
+    assert caplog.records[0].levelno == logging.CRITICAL
+    assert caplog.records[0].msg == (
+        "DatabaseError: test does not exist in database")
 
 
 @patch("src.ingestion.Connection")
@@ -156,15 +188,51 @@ def test_select_updated_returns_false_if_database_is_not_updated_at_interval(
 
 
 @patch("src.ingestion.Connection")
-def test_select_updated_raises_and_logs_error_if_table_not_in_database(
-    mock_connection,
-):
+def test_select_updated_logs_error_if_table_does_not_exist(
+        mock_connection, caplog):
+    from src.ingestion import sql_select_updated
+
+    mock_connection().run.side_effect = pge.DatabaseError
+
+    with pytest.raises(pge.DatabaseError):
+        sql_select_updated('', 'test', 1)
+
+    assert caplog.records[0].levelno == logging.CRITICAL
+    assert caplog.records[0].msg == (
+        "DatabaseError: test does not exist in database")
+
+
+@pytest.fixture(scope="function")
+def s3(aws_credentials):
+    with mock_s3():
+        yield boto3.client("s3", region_name="us-east-1")
+
+
+@pytest.fixture
+def bucket_name():
+    return 'test_bucket'
+
+
+@pytest.fixture
+def s3_bucket(s3, bucket_name):
+    s3.create_bucket(Bucket=bucket_name)
+
+
+def test_check_key_exists_returns_true_if_key_in_s3(s3, s3_bucket):
     import src.ingestion
 
-    table_names = ["table_1", "table_2", "table_3"]
-    check_table = "table"
-    with patch("src.ingestion.sql_select_updated") as mock:
-        if check_table not in table_names:
-            mock.side_effect = pge.DatabaseError
-        with pytest.raises(pge.DatabaseError):
-            src.ingestion.sql_select_updated("test", "table", "1 day")
+    name = 'test_bucket'
+    key = 'test.csv'
+
+    s3.put_object(Bucket=name, Key=key)
+    assert src.ingestion.check_key_exists(name, key)
+
+
+def test_check_key_exists_returns_false_if_no_key_in_s3(s3, s3_bucket):
+    import src.ingestion
+
+    with patch('src.ingestion.s3_client.head_object') as mock:
+        mock.side_effect = boto3.client(
+            's3').exceptions.NoSuchKey({}, '')
+
+    assert not src.ingestion.check_key_exists('test_bucket', 'test.csv')
