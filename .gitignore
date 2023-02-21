@@ -8,12 +8,17 @@
 # Crash log files
 crash.log
 
+
+*/__pycache__/
+
 # venv
 venv/
 
 #database credentials
-*.tfvars
+terraform/*.tfvars
 
 #dependencies for zipping
 zips/ingestion_files/*
 zips/processing_files/*
+
+.DS_Store
