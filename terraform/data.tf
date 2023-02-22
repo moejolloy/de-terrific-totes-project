@@ -3,15 +3,6 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 
-# Archive_file will archive a file and zip it when running terraform apply
-# we can do this for all python files
-
-data "archive_file" "dummy_lambda_zipper" {
-  type        = "zip"
-  source_file = "${path.module}/../src/reader.py"
-  output_path = "${path.module}/../zips/reader.zip"
-}
-
 data "archive_file" "ingestion_lambda_zipper" {
   type        = "zip"
   source_dir  = "${path.module}/../zips/ingestion_files"
@@ -47,6 +38,7 @@ resource "null_resource" "pip_install_ingestion_dependencies" {
 resource "null_resource" "copy_ingestion_file_for_zipping" {
   triggers = {
     shell_hash = "${sha256(file("${path.module}/../src/ingestion.py"))}"
+    always_run = "${timestamp()}"
   }
 
   provisioner "local-exec" {
@@ -57,6 +49,7 @@ resource "null_resource" "copy_ingestion_file_for_zipping" {
 resource "null_resource" "copy_utils_file_for_zipping" {
   triggers = {
     shell_hash = "${sha256(file("${path.module}/../src/utils.py"))}"
+    always_run = "${timestamp()}"
   }
 
   provisioner "local-exec" {
@@ -77,6 +70,7 @@ resource "null_resource" "pip_install_processing_dependencies" {
 resource "null_resource" "copy_processing_file_for_zipping" {
   triggers = {
     shell_hash = "${sha256(file("${path.module}/../src/transformation.py"))}"
+    always_run = "${timestamp()}"
   }
 
   provisioner "local-exec" {

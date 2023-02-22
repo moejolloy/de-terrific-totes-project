@@ -262,7 +262,7 @@ def data_to_bucket_csv_file(
         rows_list.append(row_data_dict)
     df = pd.DataFrame(data=rows_list, columns=column_headers)
     csv_buffer = StringIO()
-    df.to_csv(csv_buffer)
+    df.to_csv(csv_buffer, index=False)
 
     try:
         s3_resource.Object(bucket_name, bucket_key).put(

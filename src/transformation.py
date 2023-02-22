@@ -1,6 +1,6 @@
 import pandas as pd
 import logging
-from src.utils import load_csv_from_s3, export_parquet_to_s3
+from utils import load_csv_from_s3, export_parquet_to_s3
 
 logger = logging.getLogger("processing")
 logger.setLevel(logging.INFO)
