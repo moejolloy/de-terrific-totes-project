@@ -11,14 +11,15 @@ data "aws_iam_policy_document" "read-write-access-ingest-bucket-document" {
     actions   = ["s3:*Object"]
     resources = ["arn:aws:s3:::${aws_s3_bucket.ingest-bucket.bucket}/*"]
   }
-}
-
-data "aws_iam_policy_document" "read-only-access-ingest-bucket-document" {
   statement {
-    sid       = "ListObjectsInBucket"
-    effect    = "Allow"
-    actions   = ["s3:Get*", "s3:List*"]
-    resources = ["arn:aws:s3:::${aws_s3_bucket.ingest-bucket.bucket}"]
+    effect = "Allow"
+    actions = [
+      "secretsmanager:DescribeSecret",
+      "secretsmanager:GetSecretValue",
+      "secretsmanager:PutSecretValue",
+      "secretsmanager:UpdateSecretVersionStage"
+    ]
+    resources = [aws_secretsmanager_secret.database_credentials.arn]
   }
 }
 
@@ -49,11 +50,6 @@ data "aws_iam_policy_document" "read-only-access-processed-bucket-document" {
 resource "aws_iam_policy" "read-write-access-ingest-bucket-policy" {
   name_prefix = "read-write-access-ingest-bucket-policy"
   policy      = data.aws_iam_policy_document.read-write-access-ingest-bucket-document.json
-}
-
-resource "aws_iam_policy" "read-only-access-ingest-bucket-policy" {
-  name_prefix = "read-only-access-ingest-bucket-policy"
-  policy      = data.aws_iam_policy_document.read-only-access-ingest-bucket-document.json
 }
 
 resource "aws_iam_policy" "read-write-access-processed-bucket-policy" {
@@ -137,9 +133,9 @@ resource "aws_iam_role_policy_attachment" "ingest-lambda-read-write-policy-attac
   policy_arn = aws_iam_policy.read-write-access-ingest-bucket-policy.arn
 }
 
-resource "aws_iam_role_policy_attachment" "processed-lambda-read-only-ingest-bucket-policy-attachment" {
+resource "aws_iam_role_policy_attachment" "processed-lambda-read-write-ingest-bucket-policy-attachment" {
   role       = aws_iam_role.processed-lambda-role.name
-  policy_arn = aws_iam_policy.read-only-access-ingest-bucket-policy.arn
+  policy_arn = aws_iam_policy.read-write-access-ingest-bucket-policy.arn
 }
 
 resource "aws_iam_role_policy_attachment" "processed-lambda-read-write-processed-bucket-policy-attachment" {

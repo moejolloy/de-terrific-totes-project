@@ -99,6 +99,7 @@ def get_connection(credentials):
         InterfaceError
         RuntimeError
     """
+
     try:
         HOST = credentials["host"]
         PORT = credentials["port"]
@@ -107,6 +108,7 @@ def get_connection(credentials):
         DATABASE = credentials["database"]
     except KeyError as e:
         logger.critical("Credentials key not in secret")
+
         raise e
     else:
         try:
@@ -161,8 +163,9 @@ def collect_column_headers(credentials, tables):
     """
     table_headers_list = []
     for table in tables:
-        table_headers_list.append(sql_select_column_headers(credentials,
-                                                            table))
+        column_header = sql_select_column_headers(credentials, table)
+        logging.info(column_header)
+        table_headers_list.append(column_header)
 
     return table_headers_list
 
@@ -258,7 +261,7 @@ def data_to_bucket_csv_file(
         rows_list.append(row_data_dict)
     df = pd.DataFrame(data=rows_list, columns=column_headers)
     csv_buffer = StringIO()
-    df.to_csv(csv_buffer)
+    df.to_csv(csv_buffer, index=False)
 
     try:
         s3_resource.Object(bucket_name, bucket_key).put(
