@@ -156,9 +156,9 @@ def insert_data_into_db(data, table):
         except Exception as err:
             logger.error(err)
         finally:
-           cursor.close()
-           conn.close()
-           logger.info('Connection closed successfully')
+            cursor.close()
+            conn.close()
+            logger.info('Connection closed successfully')
 
 
 def get_warehouse_connection(credentials):
@@ -173,7 +173,7 @@ def get_warehouse_connection(credentials):
     """
     try:
         return psycopg2.connect(**credentials)
-    except psycopg2.OperationalError as err:
+    except psycopg2.OperationalError:
         logger.error('Invalid Credentials.')
     except Exception as err:
         logger.error(err)

@@ -75,7 +75,7 @@ def test_insert_data_into_db_connection_error(mock_gsv, mock_gwc, caplog):
 @patch('src.population.psycopg2.extras')
 @patch('src.population.get_warehouse_connection')
 @patch('src.population.get_secret_value')
-def test_insert_data_into_db_query_err(
+def test_insert_data_into_db_query_error(
         mock_gsv, mock_gwc, mock_extras, caplog):
     mock_gsv.return_value = {'user': 'name'}
     mock_extras.execute_values.side_effect = Exception('Error inserting data')
