@@ -47,7 +47,7 @@ def lambda_handler(event, context):
 
     results_dict['fact_sales_order'] = False
     try:
-        df = load_parquet_from_s3(BUCKET, "sales_order.parquet",
+        df = load_parquet_from_s3(BUCKET, "fact_sales_order.parquet",
                                   parse_dates=["created_at",
                                                "last_updated",
                                                "agreed_delivery_date",
@@ -156,8 +156,9 @@ def insert_data_into_db(data, table):
         except Exception as err:
             logger.error(err)
         finally:
-            cursor.close()
-            conn.close()
+           cursor.close()
+           conn.close()
+           logger.info('Connection closed successfully')
 
 
 def get_warehouse_connection(credentials):
