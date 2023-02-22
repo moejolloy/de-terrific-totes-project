@@ -82,7 +82,7 @@ def test_file_in_bucket_has_correct_data(s3, s3_bucket):
         )
 
     data = s3.get_object(Bucket=BUCKET_NAME, Key="test.csv")["Body"].read()
-    assert data == b",column_id,column_2,column_3\n0,1,row_1,1\n1,2,row_2,2\n"
+    assert data == b"column_id,column_2,column_3\n1,row_1,1\n2,row_2,2\n"
 
 
 @patch("src.ingestion.sql_select_query", return_value=MOCK_QUERY_RETURN)

@@ -7,7 +7,9 @@ from src.transformation import (format_dim_staff,
                                 format_dim_currency,
                                 format_dim_counterparty,
                                 format_fact_sales_order,
-                                transform_data)
+                                transform_data,
+                                load_csv_from_s3,
+                                export_parquet_to_s3)
 import datetime
 import logging
 
