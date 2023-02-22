@@ -314,7 +314,7 @@ def load_func(bucket, file, parse_dates=[]):
             "last_updated": [test_datetime, test_datetime, test_datetime]
         }
         return pd.DataFrame(data=staff_data)
-    elif file == "departments.csv":
+    elif file == "department.csv":
         dept_data = {
             "department_id": [1, 2, 3],
             "department_name": ["a", "b", "c"],
