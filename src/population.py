@@ -172,5 +172,7 @@ def get_warehouse_connection(credentials):
     """
     try:
         return psycopg2.connect(**credentials)
+    except psycopg2.OperationalError as err:
+        logger.error('Invalid Credentials.')
     except Exception as err:
         logger.error(err)
