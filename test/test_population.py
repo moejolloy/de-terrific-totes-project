@@ -13,6 +13,7 @@ test_date = datetime.date.fromisoformat("2000-01-01")
 
 logger = logging.getLogger("TestLogger")
 
+
 @patch('src.population.psycopg2.extensions.connection')
 @patch('src.population.psycopg2.connect')
 def test_get_warehouse_connection_return_value(mock_conn, mock_class):
@@ -53,7 +54,6 @@ def test_insert_data_into_db(mock_gsv, mock_gwc, mock_extras, caplog):
     assert caplog.records[3].msg == 'Connection closed successfully'
 
 
-
 @patch('src.population.get_secret_value')
 def test_insert_data_into_db_credentials_error(mock_gsv, caplog):
     mock_gsv.side_effect = Exception('Error retrieving credentials')
@@ -75,7 +75,8 @@ def test_insert_data_into_db_connection_error(mock_gsv, mock_gwc, caplog):
 @patch('src.population.psycopg2.extras')
 @patch('src.population.get_warehouse_connection')
 @patch('src.population.get_secret_value')
-def test_insert_data_into_db_query_error(mock_gsv, mock_gwc, mock_extras, caplog):
+def test_insert_data_into_db_query_err(
+        mock_gsv, mock_gwc, mock_extras, caplog):
     mock_gsv.return_value = {'user': 'name'}
     mock_extras.execute_values.side_effect = Exception('Error inserting data')
     insert_data_into_db([[]], 'table1')
@@ -90,13 +91,13 @@ def test_insert_data_into_db_query_error(mock_gsv, mock_gwc, mock_extras, caplog
 def test_lambda_handler_returns_a_dictionary(mock_insert, mock_load):
     mock_load.side_effect = load_df
     test_result = {"dim_staff": True,
-                   "dim_departments" : True,
+                   "dim_departments": True,
                    "dim_address": True,
                    "dim_design": True,
                    "dim_counterparty": True,
                    "dim_currency": True,
                    "fact_sales_order": True}
-    assert lambda_handler({},{}) == test_result
+    assert lambda_handler({}, {}) == test_result
 
 
 def load_df(bucket, key, parse_dates=[]):
@@ -188,13 +189,12 @@ def load_df(bucket, key, parse_dates=[]):
         return pd.DataFrame(data=sales_order_data)
 
 
-
 @patch('src.population.load_parquet_from_s3')
 def test_lambda_handler_error(mock_load, caplog):
     mock_load.side_effect = Exception('Error loading file')
-    lambda_handler({},{})
+    lambda_handler({}, {})
     test_result = {"dim_staff": False,
-                   "dim_departments" : False,
+                   "dim_departments": False,
                    "dim_address": False,
                    "dim_design": False,
                    "dim_counterparty": False,
@@ -214,4 +214,4 @@ def test_lambda_handler_error(mock_load, caplog):
     assert caplog.records[5].msg.args[0] == 'Error loading file'
     assert caplog.records[6].levelno == logging.ERROR
     assert caplog.records[6].msg.args[0] == 'Error loading file'
-    assert lambda_handler({},{}) == test_result
+    assert lambda_handler({}, {}) == test_result
