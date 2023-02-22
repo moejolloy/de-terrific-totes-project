@@ -26,8 +26,6 @@ def lambda_handler(event, context):
         event:
 
         context:
-
-    Raises:
     """
     credentials = get_secret_value('database_credentials')
     TABLES_LIST = ['staff', 'transaction', 'design', 'address',
@@ -101,24 +99,22 @@ def get_connection(credentials):
         InterfaceError
         RuntimeError
     """
-    if __name__ == "__main__":
+    try:
         HOST = credentials["host"]
         PORT = credentials["port"]
         USER = credentials["user"]
         PASS = credentials["password"]
         DATABASE = credentials["database"]
-    else:
-        HOST = "TestHost"
-        PORT = 1234
-        DATABASE = "TestDB"
-        USER = "TestUser"
-        PASS = "TestPassword"
-    try:
-        return Connection(USER, password=PASS, database=DATABASE, host=HOST,
-                          port=PORT)
-    except pge.InterfaceError as e:
-        logger.critical(e)
+    except KeyError as e:
+        logger.critical("Credentials key not in secret")
         raise e
+    else:
+        try:
+            return Connection(USER, password=PASS, database=DATABASE,
+                              host=HOST, port=PORT)
+        except pge.InterfaceError as e:
+            logger.critical(e)
+            raise e
 
 
 def get_keys_from_table_names(tables, file_path=""):
@@ -143,7 +139,6 @@ def sql_select_column_headers(credentials, table):
         A list of column headers for that table.
     Raises:
         Database Error
-        RuntimeError
     """
     conn = get_connection(credentials)
     try:
@@ -182,7 +177,6 @@ def sql_select_query(credentials, table):
         A collection of nested lists of row data
     Raises:
         DatabaseError
-        RuntimeError
     """
     conn = get_connection(credentials)
     try:
@@ -206,7 +200,6 @@ def sql_select_updated(credentials, table, interval):
         A boolean for whether the table has been updated
     Raises:
         DatabaseError
-        RuntimeError
     """
     conn = get_connection(credentials)
     try:
@@ -255,7 +248,6 @@ def data_to_bucket_csv_file(
     Raises:
         NoSuchBucket
         ParamValidationError
-        RuntimeError
     """
     data_from_table = sql_select_query(credentials, table_name)
     rows_list = []

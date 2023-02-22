@@ -82,12 +82,30 @@ def test_logging_all_other_errors(caplog):
         assert caplog.records[0].levelno == logging.CRITICAL
 
 
+MOCK_CREDS = {"host": "test_host",
+              "port": "test_port",
+              "user": "test_user",
+              "password": "test_pass",
+              "database": "test_db"}
+
+
 # Test Get Connection
+def test_get_connection_raises_error_if_key_not_in_secret(caplog):
+    from src.ingestion import get_connection
+
+    with pytest.raises(KeyError):
+        get_connection(credentials={"test": "test"})
+
+    assert caplog.records[0].levelno == logging.CRITICAL
+    assert caplog.records[0].msg == (
+        "Credentials key not in secret")
+
+
 def test_get_connection_raises_error_if_details_are_incorrect(caplog):
     from src.ingestion import get_connection
 
     with pytest.raises(pge.InterfaceError):
-        get_connection(credentials="test")
+        get_connection(credentials=MOCK_CREDS)
 
     assert caplog.records[0].levelno == logging.CRITICAL
 
@@ -110,7 +128,7 @@ def test_sql_select_column_headers_returns_column_headers(mock_connection):
 
     test_result = [{"name": "col_1"}, {"name": "col_2"}, {"name": "col_3"}]
     mock_connection().columns = test_result
-    assert sql_select_column_headers("test", "table") == columns123
+    assert sql_select_column_headers(MOCK_CREDS, "table") == columns123
 
 
 @patch("src.ingestion.Connection")
@@ -122,7 +140,7 @@ def test_select_column_headers_logs_error_if_table_does_not_exist(
     mock_connection().run.side_effect = pge.DatabaseError
 
     with pytest.raises(pge.DatabaseError):
-        sql_select_column_headers('', 'test')
+        sql_select_column_headers(MOCK_CREDS, "test")
 
     assert caplog.records[0].levelno == logging.CRITICAL
     assert caplog.records[0].msg == (
@@ -134,7 +152,7 @@ def test_select_column_headers_logs_error_if_table_does_not_exist(
 def test_collect_column_headers_colates_lists_returned_from_sql(mock_sql):
     from src.ingestion import collect_column_headers
 
-    result = collect_column_headers("test", ["table_1", "table_2"])
+    result = collect_column_headers(MOCK_CREDS, ["table_1", "table_2"])
     assert result == [columns123, columns123]
 
 
@@ -144,7 +162,7 @@ def test_select_query_returns_list_of_row_data_from_database(mock_connection):
 
     test_result = [["Alex", 1], ["Rachael", 2], ["Joe", 3]]
     mock_connection().run.return_value = test_result
-    assert sql_select_query("test", "table") == test_result
+    assert sql_select_query(MOCK_CREDS, "table") == test_result
 
 
 @patch("src.ingestion.Connection")
@@ -156,7 +174,7 @@ def test_select_query_logs_error_if_table_does_not_exist(
     mock_connection().run.side_effect = pge.DatabaseError
 
     with pytest.raises(pge.DatabaseError):
-        sql_select_query('', 'test')
+        sql_select_query(MOCK_CREDS, "test")
 
     assert caplog.records[0].levelno == logging.CRITICAL
     assert caplog.records[0].msg == (
@@ -171,7 +189,7 @@ def test_select_updated_returns_true_if_database_has_been_updated_at_interval(
 
     test_result = [["some data", 1]]
     mock_connection().run.return_value = test_result
-    assert sql_select_updated("test", "table", "2 days")
+    assert sql_select_updated(MOCK_CREDS, "table", "2 days")
 # works with assert sql_select_updated("test", "table", "2 days") == True
 
 
@@ -183,7 +201,7 @@ def test_select_updated_returns_false_if_database_is_not_updated_at_interval(
 
     test_result = []
     mock_connection().run.return_value = test_result
-    assert not sql_select_updated("test", "table", "1 day")
+    assert not sql_select_updated(MOCK_CREDS, "table", "1 day")
 # works with assert sql_select_updated("test", "table", "1 day") == False
 
 
@@ -195,7 +213,7 @@ def test_select_updated_logs_error_if_table_does_not_exist(
     mock_connection().run.side_effect = pge.DatabaseError
 
     with pytest.raises(pge.DatabaseError):
-        sql_select_updated('', 'test', 1)
+        sql_select_updated(MOCK_CREDS, "test", 1)
 
     assert caplog.records[0].levelno == logging.CRITICAL
     assert caplog.records[0].msg == (
