@@ -15,8 +15,7 @@ data "archive_file" "processing_lambda_zipper" {
   source_dir  = "${path.module}/../zips/processing_files"
   output_path = "${path.module}/../zips/transformation.zip"
   depends_on = [null_resource.pip_install_processing_dependencies,
-    null_resource.copy_processing_file_for_zipping,
-  null_resource.copy_utils_file_for_zipping]
+    null_resource.copy_processing_file_for_zipping]
 }
 
 data "archive_file" "population_lambda_zipper" {
@@ -43,17 +42,6 @@ resource "null_resource" "copy_ingestion_file_for_zipping" {
 
   provisioner "local-exec" {
     command = "cp ../src/ingestion.py ${path.module}/../zips/ingestion_files"
-  }
-}
-
-resource "null_resource" "copy_utils_file_for_zipping" {
-  triggers = {
-    shell_hash = "${sha256(file("${path.module}/../src/utils.py"))}"
-    always_run = "${timestamp()}"
-  }
-
-  provisioner "local-exec" {
-    command = "cp ../src/utils.py ${path.module}/../zips/processing_files"
   }
 }
 
