@@ -23,8 +23,8 @@ def transform_data(event, context):
         a dictionary with keys of the files to be uploaded
         values True if file successfully processed, else None.
     """
-    bucket = "terrific-totes-ingest-bucket-4"
-    processed_bucket = "terrific-totes-processed-bucket-4"
+    bucket = "terrific-totes-ingest-bucket-100"
+    processed_bucket = "terrific-totes-processed-bucket-100"
 
     files_list = ["staff.csv", "department.csv", "address.csv",
                   "design.csv", "counterparty.csv", "currency.csv"]
@@ -40,7 +40,7 @@ def transform_data(event, context):
         (staff_df, dept_df, address_df, design_df, counterparty_df,
          currency_df) = df_list
     except Exception as error:
-        logging.error(f'Error when retrieving files: {error}')
+        logger.error(f'Error when retrieving files: {error}')
 
     try:
         files_dict = {}
@@ -55,14 +55,15 @@ def transform_data(event, context):
         files_dict["fact_sales_order.parquet"] = format_fact_sales_order(
             sales_order_df)
     except Exception as error:
-        logging.error(f'Error when formatting files: {error}')
+        logger.error(f'Error when formatting files: {error}')
 
     try:
         upload_results = {item: export_parquet_to_s3(
             files_dict[item], processed_bucket, item) for item in files_dict}
+        logger.info('SUCCESSFULLY PROCESSED')
         return upload_results
     except Exception as error:
-        logging.error(f'Error when uploading files: {error}')
+        logger.error(f'Error when uploading files: {error}')
 
 
 def format_dim_staff(staff_df, dept_df):

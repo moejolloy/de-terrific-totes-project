@@ -17,3 +17,8 @@ variable "database_info" {
   description = "placeholder for sensitive database credentials"
   sensitive   = true
 }
+
+variable "warehouse_info" {
+  description = "placeholder for sensitive warehouse credentials"
+  sensitive   = true
+}

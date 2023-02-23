@@ -2,7 +2,6 @@ name: Test and Deploy
 
 on:
   push:
-  pull_request:
     branches:
       - main
   workflow_dispatch:
@@ -12,16 +11,20 @@ on:
         default: dev
         required: false
 
+env:
+  database_credentials: ${{ secrets.DATABASE_CREDENTIALS }}
+  warehouse_credentials: ${{ secrets.DATA_WAREHOUSE_CREDENTIALS }}
+
 jobs:
-  Unit_test_and_pep8_compliance:
-    name: Unit_test_and_pep8_compliance
+  unit_test_and_pep8_compliance:
+    name: unit-test and pep8 compliance
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v3.3.0
       - name: Use Python
         uses: actions/setup-python@v4.5.0
-        with: 
+        with:
           python-version: "3.9"
       - name: Install make
         run: |
@@ -38,38 +41,64 @@ jobs:
       - name: run checkups
         run: make run-checks
 
-  # install-aws-cli:
-  #   name: install aws cli
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: downloade aws cli
-  #       run: curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-  #     - name: unzip
-  #       run: unzip awscliv2.zip
-  #     - name: install
-  #       run: sudo ./aws/install --update
+  install-aws-cli:
+    name: install aws cli
+    needs: unit_test_and_pep8_compliance
+    runs-on: ubuntu-latest
+    steps:
+      - name: download aws cli
+        run: curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+      - name: unzip
+        run: unzip awscliv2.zip
+      - name: install
+        run: sudo ./aws/install --update
 
-  # configure-aws-credentials:
-  #   name: configure aws credentials
-  #   needs: install-aws-cli
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Configure AWS Credentials
-  #       uses: aws-actions/configure-aws-credentials@v1
-  #       with:
-  #         role-to-assume: arn:aws:iam::123456789100:role/my-github-actions-role
-  #         aws-region: us-east-1
+  create-state-file-bucket:
+    name: create state-file.tf bucket
+    needs: install-aws-cli
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_KEY }}
+          aws configure set region us-east-1
+      - name: create bucket
+        run: aws s3 mb s3://terraform-state-bucket-totedd-100
+      - name: wait for bucket to be created
+        run: sleep 30s
 
-  # create-s3-bucket:
-  #   name: create s3 bucket
-  #   needs: configure-aws-credentials
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: connect to aws
-  #       uses: aws-actions/configure-aws-credentials@v1
-  #       with:
-  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #         aws-region: ${{ secrets.AWS_REGION }}
-  #     - name: create bucket
-  #       run: aws s3 mb s3://this-is-a-unique-bucket-name-jcsg2504
+  deploy-terraform-code:
+    name: deploy terraform code
+    needs: create-state-file-bucket
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: us-east-1
+      - name: Install Python for Pip
+        uses: actions/setup-python@v4.5.0
+        with:
+          python-version: "3.9"
+      - name: Manual Pip install of Processing Dependencies
+        run: pip install -r ./processing_dependencies.txt -t ./zips/processing_files
+      - name: Manual Pip install of Population Dependencies
+        run: pip install -r ./population_dependencies.txt -t ./zips/population_files
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+      - name: Terraform Init
+        id: init
+        run: cd ./terraform && terraform init -reconfigure
+      - name: Terraform Validate
+        id: validate
+        run: cd ./terraform && terraform validate -no-color
+      - name: Terraform Plan
+        id: plan
+        run: cd ./terraform && terraform plan -var="database_info=$database_credentials" -var="warehouse_info=$warehouse_credentials" -no-color -input=false
+      - name: Terraform Apply
+        run: cd ./terraform && terraform apply -var="database_info=$database_credentials" -var="warehouse_info=$warehouse_credentials" -auto-approve -input=false
