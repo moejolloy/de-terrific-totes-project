@@ -94,4 +94,4 @@ jobs:
         id: plan
         run: cd ./terraform && terraform plan -var="database_info=$database_credentials" -var="warehouse_info=$warehouse_credentials" -no-color -input=false
       - name: Terraform Apply
-        run: cd ./terraform && terraform apply -var="database_info=$database_credentials -var="warehouse_info=$warehouse_credentials" -auto-approve -input=false
+        run: cd ./terraform && terraform apply -var="database_info=$database_credentials" -var="warehouse_info=$warehouse_credentials" -auto-approve -input=false
