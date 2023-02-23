@@ -25,9 +25,9 @@ def lambda_handler(event, context):
         signifiying if the data was sucsessfully inserted into the
         Data Warehouse or not.
     """
-    BUCKET = 'Processing-Bucket'
+    BUCKET = 'terrific-totes-processed-bucket-5'
 
-    TABLE_LIST = ["dim_staff", "dim_departments", "dim_address",
+    TABLE_LIST = ["dim_staff", "dim_date", "dim_location",
                   "dim_design", "dim_counterparty", "dim_currency"]
 
     results_dict = {}
@@ -36,8 +36,7 @@ def lambda_handler(event, context):
         results_dict[f'{table}'] = False
         try:
             key = f'{table}.parquet'
-            df = load_parquet_from_s3(BUCKET, key, parse_dates=[
-                                      "created_at", "last_updated"])
+            df = load_parquet_from_s3(BUCKET, key)
             rows = df.values.tolist()
             insert_data_into_db(rows, table)
         except Exception as err:
@@ -47,11 +46,7 @@ def lambda_handler(event, context):
 
     results_dict['fact_sales_order'] = False
     try:
-        df = load_parquet_from_s3(BUCKET, "sales_order.parquet",
-                                  parse_dates=["created_at",
-                                               "last_updated",
-                                               "agreed_delivery_date",
-                                               "agreed_payment_date"])
+        df = load_parquet_from_s3(BUCKET, "fact_sales_order.parquet")
         rows = df.values.tolist()
         insert_data_into_db(rows, 'fact_sales_order')
     except Exception as err:
@@ -98,14 +93,12 @@ def get_secret_value(secret_name):
         return secrets_dict
 
 
-def load_parquet_from_s3(bucket, key, parse_dates=[]):
+def load_parquet_from_s3(bucket, key):
     """ Retrieve a Parquet file from an S3 bucket
 
     Args:
         bucket: Name of the S3 bucket from which to retrieve the file.
         key: Key that the file is stored under in the named S3 bucket.
-        parse_dates: a list of column names which contain
-                     dates to be converted to datetime objects.
 
     Returns:
         DataFrame containing the contents of the Parquet file.
@@ -115,7 +108,7 @@ def load_parquet_from_s3(bucket, key, parse_dates=[]):
         s3_response_object = s3.get_object(
             Bucket=bucket, Key=key)
         df = s3_response_object['Body'].read()
-        df = pd.read_parquet(BytesIO(df), parse_dates=parse_dates)
+        df = pd.read_parquet(BytesIO(df))
         return df
     except s3.exceptions.NoSuchBucket:
         logger.critical('Bucket does not exist')
@@ -139,14 +132,14 @@ def insert_data_into_db(data, table):
         None
     """
     try:
-        credentials = get_secret_value('WarehousePwd')
+        credentials = get_secret_value('warehouse_credentials')
         conn = get_warehouse_connection(credentials)
         cursor = conn.cursor()
     except Exception as err:
         logger.error(err)
     else:
         try:
-            cursor.execute(f'TRUNCATE TABLE {table}')
+            cursor.execute(f'DELETE FROM {table}')
             logger.info(f'Clearing data from table: {table}')
             query = f'INSERT INTO {table} VALUES %s'
             psycopg2.extras.execute_values(cursor, query, data)
@@ -158,6 +151,7 @@ def insert_data_into_db(data, table):
         finally:
             cursor.close()
             conn.close()
+            logger.info('Connection closed successfully')
 
 
 def get_warehouse_connection(credentials):
@@ -172,7 +166,7 @@ def get_warehouse_connection(credentials):
     """
     try:
         return psycopg2.connect(**credentials)
-    except psycopg2.OperationalError as err:
+    except psycopg2.OperationalError:
         logger.error('Invalid Credentials.')
     except Exception as err:
         logger.error(err)

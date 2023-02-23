@@ -40,3 +40,15 @@ resource "aws_lambda_function" "processing_lambda" {
   layers           = ["arn:aws:lambda:us-east-1:336392948345:layer:AWSSDKPandas-Python39:3"]
 }
 
+
+resource "aws_lambda_function" "population_lambda" {
+  filename         = data.archive_file.population_lambda_zipper.output_path
+  source_code_hash = data.archive_file.population_lambda_zipper.output_base64sha256
+  function_name    = var.population_lambda_name
+  role             = aws_iam_role.populate-lambda-role.arn
+  handler          = "population.lambda_handler"
+  runtime          = "python3.9"
+  timeout = 30
+  layers           = ["arn:aws:lambda:us-east-1:336392948345:layer:AWSSDKPandas-Python39:3"]
+
+}

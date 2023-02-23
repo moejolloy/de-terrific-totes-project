@@ -36,6 +36,16 @@ data "aws_iam_policy_document" "read-write-access-processed-bucket-document" {
     actions   = ["s3:*Object"]
     resources = ["arn:aws:s3:::${aws_s3_bucket.processed-bucket.bucket}/*"]
   }
+  statement {
+    effect = "Allow"
+    actions = [
+      "secretsmanager:DescribeSecret",
+      "secretsmanager:GetSecretValue",
+      "secretsmanager:PutSecretValue",
+      "secretsmanager:UpdateSecretVersionStage"
+    ]
+    resources = [aws_secretsmanager_secret.warehouse_credentials.arn]
+  }
 }
 
 data "aws_iam_policy_document" "read-only-access-processed-bucket-document" {
@@ -44,6 +54,16 @@ data "aws_iam_policy_document" "read-only-access-processed-bucket-document" {
     effect    = "Allow"
     actions   = ["s3:Get*", "s3:List*"]
     resources = ["arn:aws:s3:::${aws_s3_bucket.processed-bucket.bucket}"]
+  }
+  statement {
+    effect = "Allow"
+    actions = [
+      "secretsmanager:DescribeSecret",
+      "secretsmanager:GetSecretValue",
+      "secretsmanager:PutSecretValue",
+      "secretsmanager:UpdateSecretVersionStage"
+    ]
+    resources = [aws_secretsmanager_secret.database_credentials.arn]
   }
 }
 
@@ -145,5 +165,5 @@ resource "aws_iam_role_policy_attachment" "processed-lambda-read-write-processed
 
 resource "aws_iam_role_policy_attachment" "populate-lambda-read-only-processed-bucket-policy-attachment" {
   role       = aws_iam_role.populate-lambda-role.name
-  policy_arn = aws_iam_policy.read-only-access-processed-bucket-policy.arn
+  policy_arn = aws_iam_policy.read-write-access-processed-bucket-policy.arn
 }
