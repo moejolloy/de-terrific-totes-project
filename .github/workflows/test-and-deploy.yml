@@ -82,6 +82,10 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
           aws-region: us-east-1
+      - name: Use Python
+        uses: actions/setup-python@v4.5.0
+        with:
+          python-version: "3.9"
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
       - name: Terraform Init
