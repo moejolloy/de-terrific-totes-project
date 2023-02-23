@@ -146,7 +146,7 @@ def insert_data_into_db(data, table):
         logger.error(err)
     else:
         try:
-            cursor.execute(f'TRUNCATE TABLE {table}')
+            cursor.execute(f'DELETE FROM {table}')
             logger.info(f'Clearing data from table: {table}')
             query = f'INSERT INTO {table} VALUES %s'
             psycopg2.extras.execute_values(cursor, query, data)
