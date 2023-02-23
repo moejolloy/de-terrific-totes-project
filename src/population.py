@@ -32,6 +32,8 @@ def lambda_handler(event, context):
 
     results_dict = {}
 
+    clear_fact_table()
+
     for table in TABLE_LIST:
         results_dict[f'{table}'] = False
         try:
@@ -170,3 +172,34 @@ def get_warehouse_connection(credentials):
         logger.error('Invalid Credentials.')
     except Exception as err:
         logger.error(err)
+
+
+
+def clear_fact_table():
+    """ Removes data from fact table
+
+    Args:
+        No arguments required
+
+    Returns:
+        None
+    """
+    try:
+        credentials = get_secret_value('warehouse_credentials')
+        conn = get_warehouse_connection(credentials)
+        cursor = conn.cursor()
+    except Exception as err:
+        logger.error(err)
+    else:
+        try:
+            cursor.execute(f'DELETE FROM fact_sales_order')
+            logger.info(f'Clearing data from table: fact_sales_order')
+            conn.commit()
+            logger.info(f'Changes commited to table: fact_sales_order')
+        except Exception as err:
+            logger.error(err)
+        finally:
+            cursor.close()
+            conn.close()
+            logger.info('Connection closed successfully')
+

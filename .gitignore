@@ -18,7 +18,9 @@ venv/
 terraform/*.tfvars
 
 #dependencies for zipping
+zips/ingestion_files/*
+zips/processing_files/*
+zips/population_files/*
+zips/*.zip
 
 .DS_Store
-
-zips/*.zip

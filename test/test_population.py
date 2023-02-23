@@ -91,8 +91,8 @@ def test_insert_data_into_db_query_error(
 def test_lambda_handler_returns_a_dictionary(mock_insert, mock_load):
     mock_load.side_effect = load_df
     test_result = {"dim_staff": True,
-                   "dim_departments": True,
-                   "dim_address": True,
+                   "dim_date": True,
+                   "dim_location": True,
                    "dim_design": True,
                    "dim_counterparty": True,
                    "dim_currency": True,
@@ -112,7 +112,7 @@ def load_df(bucket, key, parse_dates=[]):
             "last_updated": [test_datetime, test_datetime, test_datetime]
         }
         return pd.DataFrame(data=staff_data)
-    elif key == "dim_departments.parquet":
+    elif key == "dim_date.parquet":
         dept_data = {
             "department_id": [1, 2, 3],
             "department_name": ["a", "b", "c"],
@@ -147,7 +147,7 @@ def load_df(bucket, key, parse_dates=[]):
             "last_updated": [test_datetime, test_datetime, test_datetime]
         }
         return pd.DataFrame(data=currency_data)
-    elif key == "dim_address.parquet":
+    elif key == "dim_location.parquet":
         location_data = {
             "address_id": [1, 2, 3],
             "address_line_1": ["17", "23", "44"],
@@ -194,8 +194,8 @@ def test_lambda_handler_error(mock_load, caplog):
     mock_load.side_effect = Exception('Error loading file')
     lambda_handler({}, {})
     test_result = {"dim_staff": False,
-                   "dim_departments": False,
-                   "dim_address": False,
+                   "dim_date": False,
+                   "dim_location": False,
                    "dim_design": False,
                    "dim_counterparty": False,
                    "dim_currency": False,
