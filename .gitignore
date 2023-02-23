@@ -14,15 +14,13 @@ crash.log
 # venv
 venv/
 
-#.zips
-zips/*.zip
-
 #database credentials
 terraform/*.tfvars
 
 #dependencies for zipping
 zips/ingestion_files/*
 zips/processing_files/*
-zips/*
+zips/population_files/*
+zips/*.zip
 
 .DS_Store
