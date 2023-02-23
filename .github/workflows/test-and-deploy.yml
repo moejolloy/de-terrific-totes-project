@@ -86,6 +86,8 @@ jobs:
         uses: actions/setup-python@v4.5.0
         with:
           python-version: "3.9"
+      - name: Manual Pip install
+        run: pip install -r ./processing_dependencies.txt -t ./zips/processing_files
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
       - name: Terraform Init

@@ -20,3 +20,5 @@ terraform/*.tfvars
 #dependencies for zipping
 
 .DS_Store
+
+zips/*.zip
