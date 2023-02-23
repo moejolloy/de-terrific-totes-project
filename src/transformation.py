@@ -23,8 +23,8 @@ def transform_data(event, context):
         a dictionary with keys of the files to be uploaded
         values True if file successfully processed, else None.
     """
-    bucket = "terrific-totes-ingest-bucket-20"
-    processed_bucket = "terrific-totes-processed-bucket-20"
+    bucket = "terrific-totes-ingest-bucket-21"
+    processed_bucket = "terrific-totes-processed-bucket-21"
 
     files_list = ["staff.csv", "department.csv", "address.csv",
                   "design.csv", "counterparty.csv", "currency.csv"]
