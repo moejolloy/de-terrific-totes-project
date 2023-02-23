@@ -82,11 +82,11 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
           aws-region: us-east-1
-      - name: Use Python
+      - name: Install Python for Pip
         uses: actions/setup-python@v4.5.0
         with:
           python-version: "3.9"
-      - name: Manual Pip install
+      - name: Manual Pip install of Processing Dependencies
         run: pip install -r ./processing_dependencies.txt -t ./zips/processing_files
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
