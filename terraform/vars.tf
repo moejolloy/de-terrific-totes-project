@@ -18,7 +18,7 @@ variable "database_info" {
   sensitive   = true
 }
 
-# variable "warehouse_info" {
-#   description = "placeholder for sensitive warehouse credentials"
-#   sensitive   = true
-# }
+variable "warehouse_info" {
+  description = "placeholder for sensitive warehouse credentials"
+  sensitive   = true
+}

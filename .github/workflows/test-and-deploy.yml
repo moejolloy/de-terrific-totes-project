@@ -14,7 +14,7 @@ on:
 
 env:
   database_credentials: ${{ secrets.DATABASE_CREDENTIALS }}
-  warehouse_credenialas: ${{ secrets.DATABASE_CREDENTIALS }}
+  warehouse_credentials: ${{ secrets.DATA_WAREHOUSE_CREDENTIALS }}
 
 
 jobs:
@@ -92,6 +92,6 @@ jobs:
         run: cd ./terraform && terraform validate -no-color
       - name: Terraform Plan
         id: plan
-        run: cd ./terraform && terraform plan -var="database_info=$database_credentials" -no-color -input=false
+        run: cd ./terraform && terraform plan -var="database_info=$database_credentials, warehouse_info=$warehouse_credentials" -no-color -input=false
       - name: Terraform Apply
-        run: cd ./terraform && terraform apply -var="database_info=$database_credentials" -auto-approve -input=false
+        run: cd ./terraform && terraform apply -var="database_info=$database_credentials, warehouse_info=$warehouse_credentials" -auto-approve -input=false
