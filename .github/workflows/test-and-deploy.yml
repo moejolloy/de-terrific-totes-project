@@ -2,7 +2,6 @@ name: Test and Deploy
 
 on:
   push:
-  pull_request:
     branches:
       - main
   workflow_dispatch:
@@ -16,10 +15,9 @@ env:
   database_credentials: ${{ secrets.DATABASE_CREDENTIALS }}
   warehouse_credentials: ${{ secrets.DATA_WAREHOUSE_CREDENTIALS }}
 
-
 jobs:
-  Unit_test_and_pep8_compliance:
-    name: Unit_test_and_pep8_compliance
+  unit_test_and_pep8_compliance:
+    name: unit-test and pep8 compliance
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
@@ -45,6 +43,7 @@ jobs:
 
   install-aws-cli:
     name: install aws cli
+    needs: unit_test_and_pep8_compliance
     runs-on: ubuntu-latest
     steps:
       - name: download aws cli
