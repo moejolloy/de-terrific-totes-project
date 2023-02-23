@@ -175,32 +175,3 @@ def get_warehouse_connection(credentials):
         logger.error('Invalid Credentials.')
     except Exception as err:
         logger.error(err)
-
-
-def clear_fact_table():
-    """ Removes data from fact table
-
-    Args:
-        No arguments required
-
-    Returns:
-        None
-    """
-    try:
-        credentials = get_secret_value('warehouse_credentials')
-        conn = get_warehouse_connection(credentials)
-        cursor = conn.cursor()
-    except Exception as err:
-        logger.error(err)
-    else:
-        try:
-            cursor.execute('DELETE FROM fact_sales_order')
-            logger.info('Clearing data from table: fact_sales_order')
-            conn.commit()
-            logger.info('Changes commited to table: fact_sales_order')
-        except Exception as err:
-            logger.error(err)
-        finally:
-            cursor.close()
-            conn.close()
-            logger.info('Connection closed successfully')
