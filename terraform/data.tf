@@ -2,92 +2,65 @@ data "aws_caller_identity" "current" {}
 
 data "aws_region" "current" {}
 
-
-data "archive_file" "ingestion_lambda_zipper" {
+data "archive_file" "ingestion_zip" {
   type        = "zip"
-  source_dir  = "${path.module}/../zips/ingestion_files"
+  source_dir  = "${path.module}/../src"
   output_path = "${path.module}/../zips/ingestion.zip"
-  depends_on  = [null_resource.pip_install_ingestion_dependencies, null_resource.copy_ingestion_file_for_zipping]
+  depends_on  = [data.archive_file.ingestion_dependencies]
 }
 
-data "archive_file" "processing_lambda_zipper" {
+data "archive_file" "processing_zip" {
   type        = "zip"
-  source_dir  = "${path.module}/../zips/processing_files"
-  output_path = "${path.module}/../zips/transformation.zip"
-  depends_on = [null_resource.pip_install_processing_dependencies,
-    null_resource.copy_processing_file_for_zipping]
+  source_dir  = "${path.module}/../src"
+  output_path = "${path.module}/../zips/processing.zip"
+  depends_on  = [data.archive_file.processing_dependencies]
 }
 
-data "archive_file" "population_lambda_zipper" {
+data "archive_file" "population_zip" {
   type        = "zip"
-  source_dir = "${path.module}/../zips/population_files"
+  source_dir  = "${path.module}/../src"
   output_path = "${path.module}/../zips/population.zip"
-  depends_on = [null_resource.pip_install_population_dependencies, 
-    null_resource.copy_population_file_for_zipping]
+  depends_on  = [data.archive_file.population_dependencies]
 }
 
-resource "null_resource" "pip_install_ingestion_dependencies" {
-  triggers = {
-    shell_hash = "${sha256(file("${path.module}/../ingestion_dependencies.txt"))}"
-    always_run = "${timestamp()}"
-  }
-
-  provisioner "local-exec" {
-    command = "pip install -r ../ingestion_dependencies.txt -t ${path.module}/../zips/ingestion_files"
-  }
+data "archive_file" "ingestion_dependencies" {
+  type        = "zip"
+  source_dir  = "${path.module}/../"
+  output_path = "${path.module}/../zips/ingestion_dependencies.zip"
 }
 
-resource "null_resource" "copy_ingestion_file_for_zipping" {
-  triggers = {
-    shell_hash = "${sha256(file("${path.module}/../src/ingestion.py"))}"
-    always_run = "${timestamp()}"
-  }
-
-  provisioner "local-exec" {
-    command = "cp ../src/ingestion.py ${path.module}/../zips/ingestion_files"
-  }
+data "archive_file" "processing_dependencies" {
+  type        = "zip"
+  source_dir  = "${path.module}/../"
+  output_path = "${path.module}/../zips/processing_dependencies.zip"
 }
 
-resource "null_resource" "pip_install_processing_dependencies" {
-  triggers = {
-    shell_hash = "${sha256(file("${path.module}/../processing_dependencies.txt"))}"
-    always_run = "${timestamp()}"
-  }
-
-  provisioner "local-exec" {
-    command = "pip install -r ../processing_dependencies.txt -t ${path.module}/../zips/processing_files"
-  }
+data "archive_file" "population_dependencies" {
+  type        = "zip"
+  source_dir  = "${path.module}/../"
+  output_path = "${path.module}/../zips/population_dependencies.zip"
 }
 
-resource "null_resource" "copy_processing_file_for_zipping" {
-  triggers = {
-    shell_hash = "${sha256(file("${path.module}/../src/transformation.py"))}"
-    always_run = "${timestamp()}"
-  }
-
-  provisioner "local-exec" {
-    command = "cp ../src/transformation.py ${path.module}/../zips/processing_files"
-  }
+resource "aws_lambda_function" "ingestion" {
+  filename      = "${data.archive_file.ingestion_zip.output_path}"
+  function_name = "ingestion_lambda"
+  role          = aws_iam_role.ingestion_lambda.arn
+  handler       = "ingestion.lambda_handler"
+  runtime       = "python3.8"
 }
 
-resource "null_resource" "pip_install_population_dependencies" {
-  triggers = {
-    shell_hash = "${sha256(file("${path.module}/../population_dependencies.txt"))}"
-    always_run = "${timestamp()}"
-  }
-
-  provisioner "local-exec" {
-    command = "pip install -r ../population_dependencies.txt -t ${path.module}/../zips/population_files"
-  }
+resource "aws_lambda_function" "processing" {
+  filename      = "${data.archive_file.processing_zip.output_path}"
+  function_name = "processing_lambda"
+  role          = aws_iam_role.processing_lambda.arn
+  handler       = "processing.lambda_handler"
+  runtime       = "python3.8"
 }
 
-resource "null_resource" "copy_population_file_for_zipping" {
-  triggers = {
-    shell_hash = "${sha256(file("${path.module}/../src/population.py"))}"
-    always_run = "${timestamp()}"
-  }
-
-  provisioner "local-exec" {
-    command = "cp ../src/population.py ${path.module}/../zips/population_files"
-  }
+resource "aws_lambda_function" "population" {
+  filename      = "${data.archive_file.population_zip.output_path}"
+  function_name = "population_lambda"
+  role          = aws_iam_role.population_lambda.arn
+  handler       = "population.lambda_handler"
+  runtime       = "python3.8"
 }
