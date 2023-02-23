@@ -20,12 +20,9 @@ zips/*.zip
 #database credentials
 terraform/*.tfvars
 
-<<<<<<< HEAD
-=======
 #dependencies for zipping
 zips/ingestion_files/*
 zips/processing_files/*
-zips/*
->>>>>>> 0fba7674f4f3189a783905a90b1a34f92f136721
+zips/*.zip
 
 .DS_Store
