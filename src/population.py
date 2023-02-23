@@ -32,8 +32,6 @@ def lambda_handler(event, context):
 
     results_dict = {}
 
-    clear_fact_table()
-
     for table in TABLE_LIST:
         results_dict[f'{table}'] = False
         try:
@@ -141,9 +139,14 @@ def insert_data_into_db(data, table):
         logger.error(err)
     else:
         try:
-            cursor.execute(f'DELETE FROM {table}')
+            cursor.execute(f'SELECT * FROM fact_sales_order;')
+            if len(cursor.fetchall()) > 0 and (table != 'fact_sales_order'):
+                cursor.execute(f'DELETE FROM fact_sales_order;')
+                conn.commit()
+
+            cursor.execute(f'DELETE FROM {table};')
             logger.info(f'Clearing data from table: {table}')
-            query = f'INSERT INTO {table} VALUES %s'
+            query = f'INSERT INTO {table} VALUES %s;'
             psycopg2.extras.execute_values(cursor, query, data)
             logger.info(f'Inserting data into table: {table}')
             conn.commit()
