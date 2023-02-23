@@ -41,3 +41,48 @@ resource "aws_lambda_permission" "allow_sns_to_trigger_processing_lambda" {
   source_account = data.aws_caller_identity.current.account_id
 }
 
+
+resource "aws_cloudwatch_log_metric_filter" "processing_lambda_success" {
+  name           = "processing_lambda_success"
+  pattern        = "SUCCESSFULLY PROCESSED"
+  log_group_name = "/aws/lambda/${var.processing_lambda_name}"
+  depends_on     = [aws_cloudwatch_log_group.processing_cloudwatch_log_group]
+
+  metric_transformation {
+    name      = "EventCount"
+    namespace = "processing_lambda_success"
+    value     = "1"
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "processing_lambda_complete" {
+  alarm_name          = "processing_lambda_complete"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = "1"
+  period              = "30"
+  metric_name         = "EventCount"
+  namespace           = "processing_lambda_success"
+  threshold           = "1"
+  statistic           = "SampleCount"
+  alarm_actions       = ["arn:aws:sns:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trigger_population_lambda_topic"]
+  # alarm actions may need to send an email, or some other way of alerting us to the alarm
+}
+
+resource "aws_sns_topic" "trigger_population_lambda_topic" {
+  name = "trigger_population_lambda_topic"
+}
+
+resource "aws_sns_topic_subscription" "trigger_population_lambda_subscription" {
+  topic_arn = aws_sns_topic.trigger_population_lambda_topic.arn
+  protocol  = "lambda"
+  endpoint  = aws_lambda_function.population_lambda.arn
+}
+
+resource "aws_lambda_permission" "allow_sns_to_trigger_population_lambda" {
+  action         = "lambda:InvokeFunction"
+  function_name  = aws_lambda_function.population_lambda.function_name
+  principal      = "sns.amazonaws.com"
+  source_arn     = aws_sns_topic.trigger_population_lambda_topic.arn
+  source_account = data.aws_caller_identity.current.account_id
+}
+

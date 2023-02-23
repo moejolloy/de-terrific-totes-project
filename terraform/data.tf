@@ -15,15 +15,15 @@ data "archive_file" "processing_lambda_zipper" {
   source_dir  = "${path.module}/../zips/processing_files"
   output_path = "${path.module}/../zips/transformation.zip"
   depends_on = [null_resource.pip_install_processing_dependencies,
-    null_resource.copy_processing_file_for_zipping]
+  null_resource.copy_processing_file_for_zipping]
 }
 
 data "archive_file" "population_lambda_zipper" {
   type        = "zip"
-  source_dir = "${path.module}/../zips/population_files"
+  source_dir  = "${path.module}/../zips/population_files"
   output_path = "${path.module}/../zips/population.zip"
-  depends_on = [null_resource.pip_install_population_dependencies, 
-    null_resource.copy_population_file_for_zipping]
+  depends_on = [null_resource.pip_install_population_dependencies,
+  null_resource.copy_population_file_for_zipping]
 }
 
 resource "null_resource" "pip_install_ingestion_dependencies" {

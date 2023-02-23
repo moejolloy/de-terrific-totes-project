@@ -60,6 +60,7 @@ def transform_data(event, context):
     try:
         upload_results = {item: export_parquet_to_s3(
             files_dict[item], processed_bucket, item) for item in files_dict}
+        logging.info('SUCCESSFULLY PROCESSED')
         return upload_results
     except Exception as error:
         logging.error(f'Error when uploading files: {error}')
