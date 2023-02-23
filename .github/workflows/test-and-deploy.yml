@@ -88,6 +88,8 @@ jobs:
           python-version: "3.9"
       - name: Manual Pip install of Processing Dependencies
         run: pip install -r ./processing_dependencies.txt -t ./zips/processing_files
+      - name: Manual Pip install of Population Dependencies
+        run: pip install -r ./population_dependencies.txt -t ./zips/population_files
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
       - name: Terraform Init
