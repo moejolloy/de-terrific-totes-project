@@ -174,7 +174,6 @@ def get_warehouse_connection(credentials):
         logger.error(err)
 
 
-
 def clear_fact_table():
     """ Removes data from fact table
 
@@ -192,14 +191,13 @@ def clear_fact_table():
         logger.error(err)
     else:
         try:
-            cursor.execute(f'DELETE FROM fact_sales_order')
-            logger.info(f'Clearing data from table: fact_sales_order')
+            cursor.execute('DELETE FROM fact_sales_order')
+            logger.info('Clearing data from table: fact_sales_order')
             conn.commit()
-            logger.info(f'Changes commited to table: fact_sales_order')
+            logger.info('Changes commited to table: fact_sales_order')
         except Exception as err:
             logger.error(err)
         finally:
             cursor.close()
             conn.close()
             logger.info('Connection closed successfully')
-
