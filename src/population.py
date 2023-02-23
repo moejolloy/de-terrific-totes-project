@@ -25,7 +25,7 @@ def lambda_handler(event, context):
         signifiying if the data was sucsessfully inserted into the
         Data Warehouse or not.
     """
-    BUCKET = 'terrific-totes-processed-bucket-25'
+    BUCKET = 'terrific-totes-processed-bucket-100'
 
     TABLE_LIST = ["dim_staff", "dim_date", "dim_location",
                   "dim_design", "dim_counterparty", "dim_currency"]
