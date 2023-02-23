@@ -139,9 +139,9 @@ def insert_data_into_db(data, table):
         logger.error(err)
     else:
         try:
-            cursor.execute(f'SELECT * FROM fact_sales_order;')
+            cursor.execute('SELECT * FROM fact_sales_order;')
             if len(cursor.fetchall()) > 0 and (table != 'fact_sales_order'):
-                cursor.execute(f'DELETE FROM fact_sales_order;')
+                cursor.execute('DELETE FROM fact_sales_order;')
                 conn.commit()
 
             cursor.execute(f'DELETE FROM {table};')
