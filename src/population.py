@@ -185,7 +185,7 @@ def insert_data_into_db(data, table):
             logger.info(f'Clearing data from table: {table}')
             query = f'INSERT INTO {table} VALUES %s;'
             if table == 'dim_transaction':
-                logging.info(data)
+                logger.info(data)
             psycopg2.extras.execute_values(cursor, query, data)
             logger.info(f'Inserting data into table: {table}')
             conn.commit()
