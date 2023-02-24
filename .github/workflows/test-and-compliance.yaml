@@ -47,7 +47,7 @@ jobs:
         uses: hashicorp/setup-terraform@v2
       - name: Terraform Init
         id: init
-        run: cd ./terraform && terraform init
+        run: cd ./terraform && terraform init -backend=false
       - name: Terraform Validate
         id: validate
         run: cd ./terraform && terraform validate -no-color
