@@ -195,6 +195,15 @@ def insert_data_into_db(data, table):
             psycopg2.extras.execute_values(cursor, query, data)
             logger.info(f'Inserting data into table: {table}')
             conn.commit()
+            if table == 'dim_transaction':
+                cursor.execute('UPDATE dim_transaction \
+                               SET sales_order_id = NULL \
+                               WHERE sales_order_id = -1;')
+                conn.commit()
+                cursor.execute('UPDATE dim_transaction \
+                               SET purchase_order_id = NULL \
+                               WHERE purchase_order_id = -1;')
+                conn.commit()
             logger.info(f'Changes commited to table: {table}')
         except Exception as err:
             logger.error(err)
