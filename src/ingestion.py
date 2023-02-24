@@ -32,7 +32,7 @@ def lambda_handler(event, context):
                    'sales_order', 'counterparty', 'payment',
                    'payment_type', 'currency', 'department',
                    'purchase_order']
-    BUCKET = 'terrific-totes-ingest-bucket-100'
+    BUCKET = 'terrific-totes-ingest-bucket-50'
     INTERVAL = '30 minutes'
     has_updated = False
     columns = collect_column_headers(credentials, TABLES_LIST)
@@ -54,7 +54,7 @@ def lambda_handler(event, context):
         logger.info("NO FILES TO UPDATE")
 
 
-def get_secret_value(secret_name: str) -> dict:
+def get_secret_value(secret_name):
     """Finds data for a specified secret on SecretsManager.
 
     Args:
@@ -71,17 +71,17 @@ def get_secret_value(secret_name: str) -> dict:
     try:
         secret_value = secrets.get_secret_value(SecretId=secret_name)
     except secrets.exceptions.ResourceNotFoundException as e:
-        logger.critical(f"The requested secret {secret_name} was not found")
+        logger.error(f"The requested secret {secret_name} was not found")
         raise e
     except botocore.exceptions.ParamValidationError as e:
-        logger.critical("The request has invalid params")
+        logger.error("The request has invalid params")
         raise e
     except botocore.exceptions.ClientError as e:
         if e.response["Error"]["Code"] == "UnrecognizedClientException":
-            logger.critical("Security token invalid, check permissions")
+            logger.error("Security token invalid, check permissions")
             raise e
     except Exception as e:
-        logger.critical(e)
+        logger.error(e)
         raise RuntimeError
     else:
         secrets_dict = json.loads(secret_value["SecretString"])
@@ -107,7 +107,7 @@ def get_connection(credentials):
         PASS = credentials["password"]
         DATABASE = credentials["database"]
     except KeyError as e:
-        logger.critical("Credentials key not in secret")
+        logger.error("Credentials key not in secret")
 
         raise e
     else:
@@ -115,7 +115,7 @@ def get_connection(credentials):
             return Connection(USER, password=PASS, database=DATABASE,
                               host=HOST, port=PORT)
         except pge.InterfaceError as e:
-            logger.critical(e)
+            logger.error(e)
             raise e
 
 
@@ -146,7 +146,7 @@ def sql_select_column_headers(credentials, table):
     try:
         conn.run(f"SELECT * FROM {table} LIMIT 0;")
     except pge.DatabaseError as e:
-        logger.critical(f"DatabaseError: {table} does not exist in database")
+        logger.error(f"DatabaseError: {table} does not exist in database")
         raise e
     else:
         return [column['name'] for column in conn.columns]
@@ -185,7 +185,7 @@ def sql_select_query(credentials, table):
     try:
         return conn.run(f"SELECT * FROM {table};")
     except pge.DatabaseError as e:
-        logger.critical(f"DatabaseError: {table} does not exist in database")
+        logger.error(f"DatabaseError: {table} does not exist in database")
         raise e
 
 
@@ -211,7 +211,7 @@ def sql_select_updated(credentials, table, interval):
             f"last_updated > now() - INTERVAL '{interval}' LIMIT 1;"
         )
     except pge.DatabaseError as e:
-        logger.critical(f"DatabaseError: {table} does not exist in database")
+        logger.error(f"DatabaseError: {table} does not exist in database")
         raise e
     else:
         return True if len(updated) != 0 else False
@@ -268,10 +268,10 @@ def data_to_bucket_csv_file(
             Body=csv_buffer.getvalue())
     except botocore.errorfactory.ClientError as e:
         if e.response["Error"]["Code"] == "NoSuchBucket":
-            logger.critical(f"{bucket_name} does not exist in your S3")
+            logger.error(f"{bucket_name} does not exist in your S3")
             raise e
     except botocore.exceptions.ParamValidationError as e:
-        logger.critical("The request has invalid params")
+        logger.error("The request has invalid params")
         raise e
     else:
         return rows_list
