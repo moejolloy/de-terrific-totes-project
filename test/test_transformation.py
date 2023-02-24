@@ -10,6 +10,7 @@ from src.transformation import (format_dim_staff,
                                 format_dim_payment_type,
                                 format_fact_sales_order,
                                 format_fact_purchase_order,
+                                format_fact_payment,
                                 transform_data)
 import datetime
 import logging
@@ -323,6 +324,41 @@ def test_format_fact_purchase_order_returns_expected_output():
     assert format_fact_purchase_order(purchase_order_df).equals(fact_purchase_order_df)
 
 
+def test_format_fact_payment_returns_expected_output():
+    payment_data = {
+        "payment_id": [1, 2, 3],
+        "created_at": [test_datetime, test_datetime, test_datetime],
+        "last_updated": [test_datetime, test_datetime, test_datetime],
+        "transaction_id": [1, 2, 3],
+        "counterparty_id": [1, 2, 3],
+        "payment_amount": [3, 7, 9],
+        "currency_id": [1, 2, 3],
+        "payment_type_id": ["type1", "type2", "type3"],
+        "paid": [True, False, True],
+        "payment_date": [test_date, test_date, test_date],
+        "company_ac_number": [1, 2, 3],
+        "counterparty_ac_number": [1, 2, 3]
+    }
+    payment_df = pd.DataFrame(data=payment_data)
+    test_fact_payment_data = {
+        "payment_record_id": [1, 2, 3],
+        "payment_id": [1, 2, 3],
+        "created_date": [test_date, test_date, test_date],
+        "created_time": [test_time, test_time, test_time],
+        "last_updated_date": [test_date, test_date, test_date],
+        "last_updated_time": [test_time, test_time, test_time],
+        "transaction_id": [1, 2, 3],
+        "counterparty_id": [1, 2, 3],
+        "payment_amount": [3, 7, 9],
+        "currency_id": [1, 2, 3],
+        "payment_type_id": ["type1", "type2", "type3"],
+        "paid": [True, False, True],
+        "payment_date": [test_date, test_date, test_date]
+    }
+    fact_payment_df = pd.DataFrame(data=test_fact_payment_data)
+    assert format_fact_payment(payment_df).equals(fact_payment_df)
+
+
 @patch("src.transformation.export_parquet_to_s3")
 @patch("src.transformation.load_csv_from_s3")
 def test_transform_data(mock_load, mock_export):
@@ -341,6 +377,7 @@ def test_transform_data(mock_load, mock_export):
     files_dict["dim_payment_type.parquet"] = True
     files_dict["fact_sales_order.parquet"] = True
     files_dict["fact_purchase_order.parquet"] = True
+    files_dict["fact_payment.parquet"] = True
     assert transform_data({}, {}) == files_dict
 
 
@@ -480,6 +517,22 @@ def load_func(bucket, file, parse_dates=[]):
             "agreed_delivery_location_id": [1, 2, 3]
         }
         return pd.DataFrame(data=sales_order_data)
+    elif file == "payment.csv":
+        payment_data = {
+            "payment_id": [1, 2, 3],
+            "created_at": [test_datetime, test_datetime, test_datetime],
+            "last_updated": [test_datetime, test_datetime, test_datetime],
+            "transaction_id": [1, 2, 3],
+            "counterparty_id": [1, 2, 3],
+            "payment_amount": [3, 7, 9],
+            "currency_id": [1, 2, 3],
+            "payment_type_id": ["type1", "type2", "type3"],
+            "paid": [True, False, True],
+            "payment_date": [test_date, test_date, test_date],
+            "company_ac_number": [1, 2, 3],
+            "counterparty_ac_number": [1, 2, 3]
+        }
+        return pd.DataFrame(data=payment_data)
     elif file == "purchase_order.csv":
         purchase_order_data = {
             "purchase_order_id": [1, 2, 3],
@@ -519,4 +572,6 @@ def load_func_error(bucket, file, parse_dates=[]):
     elif file == "sales_order.csv":
         return True
     elif file == "purchase_order.csv":
+        return True
+    elif file == "payment.csv":
         return True

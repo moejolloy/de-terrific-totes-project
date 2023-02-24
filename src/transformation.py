@@ -43,6 +43,10 @@ def transform_data(event, context):
                                                        "last_updated",
                                                        "agreed_delivery_date",
                                                        "agreed_payment_date"])
+        payment_df = load_csv_from_s3(
+            bucket, "payment.csv", parse_dates=["created_at",
+                                                "last_updated",
+                                                "payment_date"])
         (staff_df, dept_df, address_df, design_df, counterparty_df,
         transaction_df, payment_type_df, currency_df) = df_list
     except Exception as error:
@@ -66,6 +70,8 @@ def transform_data(event, context):
             sales_order_df)
         files_dict["fact_purchase_order.parquet"] = format_fact_purchase_order(
             purchase_order_df)
+        files_dict["fact_payment.parquet"] = format_fact_payment(
+            payment_df)
     except Exception as error:
         logger.error(f'Error when formatting files: {error}')
 
@@ -284,6 +290,39 @@ def format_fact_purchase_order(purchase_order_df):
         "agreed_delivery_location_id"
     ]]
     return fact_purchase_order
+
+
+def format_fact_payment(payment_df):
+    """ Formats payment dataframe into correctly formatted dataframe.
+    Args:
+        payment_df: dataframe of data from payment.csv.
+    Returns:
+        dataframe of correctly formatted payment data.
+    """
+    payment_df["payment_record_id"] = range(1, 1+len(payment_df))
+    payment_df["created_date"] = payment_df["created_at"].dt.date
+    payment_df["created_time"] = payment_df["created_at"].dt.time
+    payment_df["last_updated_date"] = payment_df[
+        "last_updated"].dt.date
+    payment_df["last_updated_time"] = payment_df[
+        "last_updated"].dt.time
+
+    fact_payment = payment_df[[
+        "payment_record_id",
+        "payment_id",
+        "created_date",
+        "created_time",
+        "last_updated_date",
+        "last_updated_time",
+        "transaction_id",
+        "counterparty_id",
+        "payment_amount",
+        "currency_id",
+        "payment_type_id",
+        "paid",
+        "payment_date"
+    ]]
+    return fact_payment
 
 
 def load_csv_from_s3(bucket, key, parse_dates=[]):
