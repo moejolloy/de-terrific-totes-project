@@ -123,6 +123,8 @@ def test_format_dim_transaction_returns_expected_output():
         "purchase_order_id": [1, 2, 3]
     }
     dim_transaction_df = pd.DataFrame(data=test_dim_transaction_data)
+    dim_transaction_df = dim_transaction_df.astype(
+        {'sales_order_id': 'Int64', 'purchase_order_id': 'Int64'})
     assert format_dim_transaction(transaction_df).equals(dim_transaction_df)
 
 
