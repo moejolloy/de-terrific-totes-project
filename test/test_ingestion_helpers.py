@@ -53,7 +53,7 @@ def test_will_throw_and_log_error_if_secret_name_not_found_in_secretsmanager(
     with pytest.raises(botocore.errorfactory.ClientError):
         get_secret_value("NotMySecret")
     expected = "The requested secret NotMySecret was not found"
-    assert caplog.records[0].levelno == logging.CRITICAL
+    assert caplog.records[0].levelno == logging.ERROR
     assert caplog.records[0].msg == expected
 
 
@@ -65,7 +65,7 @@ def test_will_throw_and_log_error_if_secret_name_incorrect_type(
     with pytest.raises(be.ParamValidationError):
         get_secret_value(8)
 
-    assert caplog.records[0].levelno == logging.CRITICAL
+    assert caplog.records[0].levelno == logging.ERROR
     assert caplog.records[0].msg == "The request has invalid params"
 
 
@@ -79,7 +79,7 @@ def test_logging_all_other_errors(caplog):
         with pytest.raises(RuntimeError):
             src.ingestion.get_secret_value("MySecret")
 
-        assert caplog.records[0].levelno == logging.CRITICAL
+        assert caplog.records[0].levelno == logging.ERROR
 
 
 MOCK_CREDS = {"host": "test_host",
@@ -96,7 +96,7 @@ def test_get_connection_raises_error_if_key_not_in_secret(caplog):
     with pytest.raises(KeyError):
         get_connection(credentials={"test": "test"})
 
-    assert caplog.records[0].levelno == logging.CRITICAL
+    assert caplog.records[0].levelno == logging.ERROR
     assert caplog.records[0].msg == (
         "Credentials key not in secret")
 
@@ -107,7 +107,7 @@ def test_get_connection_raises_error_if_details_are_incorrect(caplog):
     with pytest.raises(pge.InterfaceError):
         get_connection(credentials=MOCK_CREDS)
 
-    assert caplog.records[0].levelno == logging.CRITICAL
+    assert caplog.records[0].levelno == logging.ERROR
 
 
 # Test SQL Helpers
@@ -142,7 +142,7 @@ def test_select_column_headers_logs_error_if_table_does_not_exist(
     with pytest.raises(pge.DatabaseError):
         sql_select_column_headers(MOCK_CREDS, "test")
 
-    assert caplog.records[0].levelno == logging.CRITICAL
+    assert caplog.records[0].levelno == logging.ERROR
     assert caplog.records[0].msg == (
         "DatabaseError: test does not exist in database")
 
@@ -176,7 +176,7 @@ def test_select_query_logs_error_if_table_does_not_exist(
     with pytest.raises(pge.DatabaseError):
         sql_select_query(MOCK_CREDS, "test")
 
-    assert caplog.records[0].levelno == logging.CRITICAL
+    assert caplog.records[0].levelno == logging.ERROR
     assert caplog.records[0].msg == (
         "DatabaseError: test does not exist in database")
 
@@ -190,7 +190,6 @@ def test_select_updated_returns_true_if_database_has_been_updated_at_interval(
     test_result = [["some data", 1]]
     mock_connection().run.return_value = test_result
     assert sql_select_updated(MOCK_CREDS, "table", "2 days")
-# works with assert sql_select_updated("test", "table", "2 days") == True
 
 
 @patch("src.ingestion.Connection")
@@ -202,7 +201,6 @@ def test_select_updated_returns_false_if_database_is_not_updated_at_interval(
     test_result = []
     mock_connection().run.return_value = test_result
     assert not sql_select_updated(MOCK_CREDS, "table", "1 day")
-# works with assert sql_select_updated("test", "table", "1 day") == False
 
 
 @patch("src.ingestion.Connection")
@@ -215,7 +213,7 @@ def test_select_updated_logs_error_if_table_does_not_exist(
     with pytest.raises(pge.DatabaseError):
         sql_select_updated(MOCK_CREDS, "test", 1)
 
-    assert caplog.records[0].levelno == logging.CRITICAL
+    assert caplog.records[0].levelno == logging.ERROR
     assert caplog.records[0].msg == (
         "DatabaseError: test does not exist in database")
 
