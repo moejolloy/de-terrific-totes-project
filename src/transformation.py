@@ -107,9 +107,6 @@ def format_dim_location(location_df):
     Returns:
         dataframe of correctly formatted location data.
     """
-    # replacement_value = "None"
-    # location_df["address_line_2"].fillna(replacement_value, inplace=True)
-    # location_df["district"].fillna(replacement_value, inplace=True)
     location_df = location_df.rename(columns={"address_id": "location_id"})
     dim_location = location_df.iloc[:, 0:8]
     return dim_location
@@ -208,8 +205,11 @@ def format_dim_transaction(transaction_df):
         dataframe of correctly formatted transaction data.
     """
 
-    return transaction_df[["transaction_id", "transaction_type",
-                           "sales_order_id", "purchase_order_id"]]
+    transaction_df = transaction_df[["transaction_id", "transaction_type",
+                                     "sales_order_id", "purchase_order_id"]]
+    transaction_df = transaction_df.astype({'sales_order_id': 'Int64',
+                                            'purchase_order_id': 'Int64'})
+    return transaction_df
 
 
 def format_dim_payment_type(payment_df):

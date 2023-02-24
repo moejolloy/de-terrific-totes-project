@@ -6,6 +6,7 @@ import pandas as pd
 from io import BytesIO
 import psycopg2
 import psycopg2.extras
+import numpy as np
 
 
 logger = logging.getLogger("population")
@@ -186,24 +187,11 @@ def insert_data_into_db(data, table):
             query = f'INSERT INTO {table} VALUES %s;'
             if table == 'dim_transaction':
                 df = pd.DataFrame(data)
-                df = df.fillna(-1)
+                df.replace({np.nan: None}, inplace=True)
                 data = df.values.tolist()
-                for value in data:
-                    value[2] = int(value[2]) if value[2] is not -1 else None
-                    value[3] = int(value[3]) if value[3] is not -1 else None
-                logger.info(data)
             psycopg2.extras.execute_values(cursor, query, data)
             logger.info(f'Inserting data into table: {table}')
             conn.commit()
-            if table == 'dim_transaction':
-                cursor.execute('UPDATE dim_transaction \
-                               SET sales_order_id = NULL \
-                               WHERE sales_order_id = -1;')
-                conn.commit()
-                cursor.execute('UPDATE dim_transaction \
-                               SET purchase_order_id = NULL \
-                               WHERE purchase_order_id = -1;')
-                conn.commit()
             logger.info(f'Changes commited to table: {table}')
         except Exception as err:
             logger.error(err)
