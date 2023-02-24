@@ -95,7 +95,7 @@ def test_function_raises_and_logs_error_if_bucket_does_not_exist(s3, s3_bucket,
             "test_creds", TABLE_NAME, TABLE_COLUMNS, "no_bucket", BUCKET_KEY
         )
 
-    assert caplog.records[0].levelno == logging.CRITICAL
+    assert caplog.records[0].levelno == logging.ERROR
     assert caplog.records[0].msg == "no_bucket does not exist in your S3"
 
 
@@ -109,7 +109,7 @@ def test_function_raises_and_logs_error_if_bucket_key_invalid(s3, s3_bucket,
             "test_creds", TABLE_NAME, TABLE_COLUMNS, BUCKET_NAME, 5
         )
 
-    assert caplog.records[0].levelno == logging.CRITICAL
+    assert caplog.records[0].levelno == logging.ERROR
     assert caplog.records[0].msg == "The request has invalid params"
 
 

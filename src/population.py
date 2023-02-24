@@ -25,7 +25,7 @@ def lambda_handler(event, context):
         signifiying if the data was sucsessfully inserted into the
         Data Warehouse or not.
     """
-    BUCKET = 'terrific-totes-processed-bucket-100'
+    BUCKET = 'terrific-totes-processed-bucket-50'
 
     TABLE_LIST = ["dim_staff", "dim_date", "dim_location",
                   "dim_design", "dim_counterparty", "dim_currency"]
@@ -76,17 +76,17 @@ def get_secret_value(secret_name):
     try:
         secret_value = secrets.get_secret_value(SecretId=secret_name)
     except secrets.exceptions.ResourceNotFoundException as e:
-        logger.critical(f"The requested secret {secret_name} was not found")
+        logger.error(f"The requested secret {secret_name} was not found")
         raise e
     except botocore.exceptions.ParamValidationError as e:
-        logger.critical("The request has invalid params")
+        logger.error("The request has invalid params")
         raise e
     except botocore.exceptions.ClientError as e:
         if e.response["Error"]["Code"] == "UnrecognizedClientException":
-            logger.critical("Security token invalid, check permissions")
+            logger.error("Security token invalid, check permissions")
             raise e
     except Exception as e:
-        logger.critical(e)
+        logger.error(e)
         raise RuntimeError
     else:
         secrets_dict = json.loads(secret_value["SecretString"])
@@ -111,13 +111,13 @@ def load_parquet_from_s3(bucket, key):
         df = pd.read_parquet(BytesIO(df))
         return df
     except s3.exceptions.NoSuchBucket:
-        logger.critical('Bucket does not exist')
+        logger.error('Bucket does not exist')
         raise s3.exceptions.NoSuchBucket({}, '')
     except s3.exceptions.NoSuchKey:
-        logger.critical("Key not found in bucket")
+        logger.error("Key not found in bucket")
         raise s3.exceptions.NoSuchKey({}, '')
     except Exception as e:
-        logger.critical(e)
+        logger.error(e)
         raise RuntimeError
 
 

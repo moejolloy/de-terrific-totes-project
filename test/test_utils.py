@@ -70,7 +70,7 @@ def test_logging_NoSuchBucket_error(caplog):
         mock.side_effect = response_error
         with pytest.raises(Exception):
             src.transformation.load_csv_from_s3('Test', 'Test')
-        assert caplog.records[0].levelno == logging.CRITICAL
+        assert caplog.records[0].levelno == logging.ERROR
         assert caplog.records[0].msg == "Bucket does not exist"
 
 
@@ -81,7 +81,7 @@ def test_logging_NoSuchKey_error(caplog):
         mock.side_effect = response_error
         with pytest.raises(Exception):
             src.transformation.load_csv_from_s3('Test', 'Test')
-        assert caplog.records[0].levelno == logging.CRITICAL
+        assert caplog.records[0].levelno == logging.ERROR
         assert caplog.records[0].msg == "Key not found in bucket"
 
 
@@ -91,7 +91,7 @@ def test_logging_other_errors_load(caplog):
         mock.side_effect = response_error
         with pytest.raises(RuntimeError):
             src.transformation.load_csv_from_s3('Test', 'Test')
-        assert caplog.records[0].levelno == logging.CRITICAL
+        assert caplog.records[0].levelno == logging.ERROR
 
 
 def test_export_parquet_to_s3_FileNotFoundError_handled():
@@ -132,7 +132,7 @@ def test_logging_FileNotFoundError(caplog):
         mock.side_effect = response_error
         with pytest.raises(FileNotFoundError):
             src.transformation.export_parquet_to_s3(pd.DataFrame, '', '')
-        assert caplog.records[0].levelno == logging.CRITICAL
+        assert caplog.records[0].levelno == logging.ERROR
         assert caplog.records[0].msg == "Bucket not found."
 
 
@@ -142,7 +142,7 @@ def test_logging_ValueError(caplog):
         mock.side_effect = response_error
         with pytest.raises(ValueError):
             src.transformation.export_parquet_to_s3(pd.DataFrame, '', '')
-        assert caplog.records[0].levelno == logging.CRITICAL
+        assert caplog.records[0].levelno == logging.ERROR
         assert caplog.records[0].msg == "Key not of correct format."
 
 
@@ -153,7 +153,7 @@ def test_logging_AttributeError(caplog):
         with pytest.raises(AttributeError):
             src.transformation.export_parquet_to_s3(pd.DataFrame, '', '')
         expected = "Object passed to the function is not of type DataFrame."
-        assert caplog.records[0].levelno == logging.CRITICAL
+        assert caplog.records[0].levelno == logging.ERROR
         assert caplog.records[0].msg == expected
 
 
@@ -163,4 +163,4 @@ def test_logging_other_errors_export(caplog):
         mock.side_effect = response_error
         with pytest.raises(RuntimeError):
             src.transformation.export_parquet_to_s3(pd.DataFrame, '', '')
-        assert caplog.records[0].levelno == logging.CRITICAL
+        assert caplog.records[0].levelno == logging.ERROR

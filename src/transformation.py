@@ -23,8 +23,8 @@ def transform_data(event, context):
         a dictionary with keys of the files to be uploaded
         values True if file successfully processed, else None.
     """
-    bucket = "terrific-totes-ingest-bucket-100"
-    processed_bucket = "terrific-totes-processed-bucket-100"
+    bucket = "terrific-totes-ingest-bucket-50"
+    processed_bucket = "terrific-totes-processed-bucket-50"
 
     files_list = ["staff.csv", "department.csv", "address.csv",
                   "design.csv", "counterparty.csv", "currency.csv"]
@@ -236,13 +236,13 @@ def load_csv_from_s3(bucket, key, parse_dates=[]):
         df = pd.read_csv(BytesIO(df), parse_dates=parse_dates)
         return df
     except s3.exceptions.NoSuchBucket:
-        logger.critical('Bucket does not exist')
+        logger.error('Bucket does not exist')
         raise s3.exceptions.NoSuchBucket({}, '')
     except s3.exceptions.NoSuchKey:
-        logger.critical("Key not found in bucket")
+        logger.error("Key not found in bucket")
         raise s3.exceptions.NoSuchKey({}, '')
     except Exception as e:
-        logger.critical(e)
+        logger.error(e)
         raise RuntimeError
 
 
@@ -261,15 +261,15 @@ def export_parquet_to_s3(data, bucket, key):
         data.to_parquet(f's3://{bucket}/{key}', index=True)
         return True
     except FileNotFoundError:
-        logger.critical("Bucket not found.")
+        logger.error("Bucket not found.")
         raise FileNotFoundError
     except ValueError:
-        logger.critical("Key not of correct format.")
+        logger.error("Key not of correct format.")
         raise ValueError
     except AttributeError:
-        logger.critical(
+        logger.error(
             "Object passed to the function is not of type DataFrame.")
         raise AttributeError
     except Exception as e:
-        logger.critical(e)
+        logger.error(e)
         raise RuntimeError
