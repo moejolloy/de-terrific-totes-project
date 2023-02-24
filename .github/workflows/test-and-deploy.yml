@@ -64,7 +64,7 @@ jobs:
           aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_KEY }}
           aws configure set region us-east-1
       - name: create bucket
-        run: aws s3 mb s3://terraform-state-bucket-totedd-50
+        run: aws s3 mb s3://terraform-state-bucket-totedd-500
       - name: wait for bucket to be created
         run: sleep 30s
 
