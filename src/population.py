@@ -64,6 +64,17 @@ def lambda_handler(event, context):
         logger.error(err)
     else:
         results_dict['fact_purchase_order'] = True
+
+    results_dict['fact_payment'] = False
+    try:
+        df = load_parquet_from_s3(BUCKET, "fact_payment.parquet")
+        rows = df.values.tolist()
+        insert_data_into_db(rows, 'fact_payment')
+    except Exception as err:
+        logger.error(err)
+    else:
+        results_dict['fact_payment'] = True
+    
     finally:
         logger.info(results_dict)
         return results_dict

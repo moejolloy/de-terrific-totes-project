@@ -99,7 +99,8 @@ def test_lambda_handler_returns_a_dictionary(mock_insert, mock_load):
                    "dim_payment_type": True,
                    "dim_currency": True,
                    "fact_sales_order": True,
-                   "fact_purchase_order": True}
+                   "fact_purchase_order": True,
+                   "fact_payment": True}
     assert lambda_handler({}, {}) == test_result
 
 
@@ -225,6 +226,22 @@ def load_df(bucket, key, parse_dates=[]):
             "agreed_delivery_location_id": [1, 2, 3]
         }
         return pd.DataFrame(data=purchase_order_data)
+    elif key == "fact_payment.parquet":
+        payment_data = {
+            "payment_id": [1, 2, 3],
+            "created_at": [test_datetime, test_datetime, test_datetime],
+            "last_updated": [test_datetime, test_datetime, test_datetime],
+            "transaction_id": [1, 2, 3],
+            "counterparty_id": [1, 2, 3],
+            "payment_amount": [3, 7, 9],
+            "currency_id": [1, 2, 3],
+            "payment_type_id": ["type1", "type2", "type3"],
+            "paid": [True, False, True],
+            "payment_date": [test_date, test_date, test_date],
+            "company_ac_number": [1, 2, 3],
+            "counterparty_ac_number": [1, 2, 3]
+        }
+        return pd.DataFrame(data=payment_data)
 
 
 @patch('src.population.load_parquet_from_s3')
@@ -240,7 +257,8 @@ def test_lambda_handler_error(mock_load, caplog):
                    "dim_payment_type": False,
                    "dim_currency": False,
                    "fact_sales_order": False,
-                   "fact_purchase_order": False}
+                   "fact_purchase_order": False,
+                   "fact_payment": False}
     assert caplog.records[0].levelno == logging.ERROR
     assert caplog.records[0].msg.args[0] == 'Error loading file'
     assert caplog.records[1].levelno == logging.ERROR
@@ -261,4 +279,6 @@ def test_lambda_handler_error(mock_load, caplog):
     assert caplog.records[8].msg.args[0] == 'Error loading file'
     assert caplog.records[9].levelno == logging.ERROR
     assert caplog.records[9].msg.args[0] == 'Error loading file'
+    assert caplog.records[10].levelno == logging.ERROR
+    assert caplog.records[10].msg.args[0] == 'Error loading file'
     assert lambda_handler({}, {}) == test_result
