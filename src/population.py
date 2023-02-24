@@ -28,7 +28,8 @@ def lambda_handler(event, context):
     BUCKET = 'terrific-totes-processed-bucket-100'
 
     TABLE_LIST = ["dim_staff", "dim_date", "dim_location",
-                  "dim_design", "dim_counterparty", "dim_currency"]
+                  "dim_design", "dim_counterparty", "dim_transaction",
+                  "dim_payment_type", "dim_currency"]
 
     results_dict = {}
 

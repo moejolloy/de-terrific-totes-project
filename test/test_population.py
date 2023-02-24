@@ -95,6 +95,8 @@ def test_lambda_handler_returns_a_dictionary(mock_insert, mock_load):
                    "dim_location": True,
                    "dim_design": True,
                    "dim_counterparty": True,
+                   "dim_transaction": True,
+                   "dim_payment_type": True,
                    "dim_currency": True,
                    "fact_sales_order": True,
                    "fact_purchase_order": True}
@@ -140,6 +142,24 @@ def load_df(bucket, key, parse_dates=[]):
                 test_datetime]
         }
         return pd.DataFrame(data=counterparty_data)
+    elif key == "dim_transaction.parquet":
+        transaction_data = {
+            "transaction_id": [1, 2, 3],
+            "transaction_type": ["type1", "type2", "type3"],
+            "sales_order_id": [1, 2, 3],
+            "purchase_order_id": [1, 2, 3],
+            "created_at": [test_datetime, test_datetime, test_datetime],
+            "last_updated": [test_datetime, test_datetime, test_datetime]
+        }
+        return pd.DataFrame(data=transaction_data)
+    elif key == "dim_payment_type.parquet":
+        payment_type_data = {
+            "payment_type_id": [1, 2, 3],
+            "payment_type_name": ["name1", "name2", "name3"],
+            "created_at": [test_datetime, test_datetime, test_datetime],
+            "last_updated": [test_datetime, test_datetime, test_datetime]  
+        }
+        return pd.DataFrame(data=payment_type_data)
     elif key == "dim_currency.parquet":
         currency_data = {
             'currency_id': [1, 2, 3],
@@ -216,6 +236,8 @@ def test_lambda_handler_error(mock_load, caplog):
                    "dim_location": False,
                    "dim_design": False,
                    "dim_counterparty": False,
+                   "dim_transaction": False,
+                   "dim_payment_type": False,
                    "dim_currency": False,
                    "fact_sales_order": False,
                    "fact_purchase_order": False}
@@ -235,4 +257,8 @@ def test_lambda_handler_error(mock_load, caplog):
     assert caplog.records[6].msg.args[0] == 'Error loading file'
     assert caplog.records[7].levelno == logging.ERROR
     assert caplog.records[7].msg.args[0] == 'Error loading file'
+    assert caplog.records[8].levelno == logging.ERROR
+    assert caplog.records[8].msg.args[0] == 'Error loading file'
+    assert caplog.records[9].levelno == logging.ERROR
+    assert caplog.records[9].msg.args[0] == 'Error loading file'
     assert lambda_handler({}, {}) == test_result
