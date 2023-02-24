@@ -165,13 +165,20 @@ def insert_data_into_db(data, table):
             fso_results = cursor.fetchall()
             cursor.execute('SELECT * FROM fact_purchase_order;')
             fpo_results = cursor.fetchall()
+            cursor.execute('SELECT * FROM fact_payment;')
+            fp_results = cursor.fetchall()
             if (
                 (len(fso_results) > 0) or (
-                    len(fpo_results) > 0)) and (
-                    table not in ['fact_sales_order', 'fact_purchase_order']):
+                    len(fpo_results) > 0) or (
+                    len(fp_results) > 0)) and (
+                    table not in ['fact_sales_order',
+                                  'fact_purchase_order',
+                                  'fact_payment']):
                 cursor.execute('DELETE FROM fact_sales_order;')
                 conn.commit()
                 cursor.execute('DELETE FROM fact_purchase_order;')
+                conn.commit()
+                cursor.execute('DELETE FROM fact_payment;')
                 conn.commit()
 
             cursor.execute(f'DELETE FROM {table};')
