@@ -12,7 +12,7 @@ on:
         required: false
 
 jobs:
-  unit_test_and_pep8_compliance:
+  unit-test-and-pep8-compliance:
     name: unit-test and pep8 compliance
     runs-on: ubuntu-latest
     steps:
@@ -36,3 +36,18 @@ jobs:
         run: make dev-setup
       - name: run checkups
         run: make run-checks
+
+  validate-terraform-code:
+    name: validate terraform code
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+      - name: Terraform Init
+        id: init
+        run: cd ./terraform && terraform init -backend=false
+      - name: Terraform Validate
+        id: validate
+        run: cd ./terraform && terraform validate -no-color
