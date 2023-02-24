@@ -7,6 +7,7 @@ from src.transformation import (format_dim_staff,
                                 format_dim_currency,
                                 format_dim_counterparty,
                                 format_fact_sales_order,
+                                format_fact_purchase_order,
                                 transform_data)
 import datetime
 import logging
@@ -249,6 +250,44 @@ def test_format_fact_sales_order_returns_expected_output():
     assert format_fact_sales_order(sales_order_df).equals(fact_sales_order_df)
 
 
+def test_format_fact_purchase_order_returns_expected_output():
+    purchase_order_data = {
+        "purchase_order_id": [1, 2, 3],
+        "created_at": [test_datetime, test_datetime, test_datetime],
+        "last_updated": [test_datetime, test_datetime, test_datetime],
+        "staff_id": [1, 2, 3],
+        "counterparty_id": [1, 2, 3],
+        "item_code": ["dummy data 1", "dummy data 2", "dummy data 3"],
+        "design_id": ["des1", "des2", "des3"],
+        "item_quantity": [3, 4, 9],
+        "item_unit_price": [4, 8, 3],
+        "currency_id": [1, 2, 3],
+        "agreed_delivery_date": [test_date, test_date, test_date],
+        "agreed_payment_date": [test_date, test_date, test_date],
+        "agreed_delivery_location_id": [1, 2, 3]
+    }
+    purchase_order_df = pd.DataFrame(data=purchase_order_data)
+    test_fact_purchase_order_data = {
+        "purchase_record_id": [1, 2, 3],
+        "purchase_order_id": [1, 2, 3],
+        "created_date": [test_date, test_date, test_date],
+        "created_time": [test_time, test_time, test_time],
+        "last_updated_date": [test_date, test_date, test_date],
+        "last_updated_time": [test_time, test_time, test_time],
+        "staff_id": [1, 2, 3],
+        "counterparty_id": [1, 2, 3],
+        "item_code": ["dummy data 1", "dummy data 2", "dummy data 3"],
+        "item_quantity": [3, 4, 9],
+        "item_unit_price": [4, 8, 3],
+        "currency_id": [1, 2, 3],
+        "agreed_delivery_date": [test_date, test_date, test_date],
+        "agreed_payment_date": [test_date, test_date, test_date],
+        "agreed_delivery_location_id": [1, 2, 3]
+    }
+    fact_purchase_order_df = pd.DataFrame(data=test_fact_purchase_order_data)
+    assert format_fact_purchase_order(purchase_order_df).equals(fact_purchase_order_df)
+
+
 @patch("src.transformation.export_parquet_to_s3")
 @patch("src.transformation.load_csv_from_s3")
 def test_transform_data(mock_load, mock_export):
@@ -264,6 +303,7 @@ def test_transform_data(mock_load, mock_export):
     files_dict["dim_currency.parquet"] = True
     files_dict["dim_counterparty.parquet"] = True
     files_dict["fact_sales_order.parquet"] = True
+    files_dict["fact_purchase_order.parquet"] = True
     assert transform_data({}, {}) == files_dict
 
 
@@ -389,6 +429,23 @@ def load_func(bucket, file, parse_dates=[]):
             "agreed_delivery_location_id": [1, 2, 3]
         }
         return pd.DataFrame(data=sales_order_data)
+    elif file == "purchase_order.csv":
+        purchase_order_data = {
+            "purchase_order_id": [1, 2, 3],
+            "created_at": [test_datetime, test_datetime, test_datetime],
+            "last_updated": [test_datetime, test_datetime, test_datetime],
+            "staff_id": [1, 2, 3],
+            "counterparty_id": [1, 2, 3],
+            "item_code": ["dummy data 1", "dummy data 2", "dummy data 3"],
+            "design_id": ["des1", "des2", "des3"],
+            "item_quantity": [3, 4, 9],
+            "item_unit_price": [4, 8, 3],
+            "currency_id": [1, 2, 3],
+            "agreed_delivery_date": [test_date, test_date, test_date],
+            "agreed_payment_date": [test_date, test_date, test_date],
+            "agreed_delivery_location_id": [1, 2, 3]
+        }
+        return pd.DataFrame(data=purchase_order_data)
 
 
 def load_func_error(bucket, file, parse_dates=[]):
@@ -405,4 +462,6 @@ def load_func_error(bucket, file, parse_dates=[]):
     elif file == "design.csv":
         return True
     elif file == "sales_order.csv":
+        return True
+    elif file == "purchase_order.csv":
         return True

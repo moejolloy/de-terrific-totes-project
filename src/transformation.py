@@ -37,6 +37,11 @@ def transform_data(event, context):
                                                     "last_updated",
                                                     "agreed_delivery_date",
                                                     "agreed_payment_date"])
+        purchase_order_df = load_csv_from_s3(
+            bucket, "purchase_order.csv", parse_dates=["created_at",
+                                                       "last_updated",
+                                                       "agreed_delivery_date",
+                                                       "agreed_payment_date"])
         (staff_df, dept_df, address_df, design_df, counterparty_df,
          currency_df) = df_list
     except Exception as error:
@@ -54,6 +59,8 @@ def transform_data(event, context):
             counterparty_df, address_df)
         files_dict["fact_sales_order.parquet"] = format_fact_sales_order(
             sales_order_df)
+        files_dict["fact_purchase_order.parquet"] = format_fact_purchase_order(
+            purchase_order_df)
     except Exception as error:
         logger.error(f'Error when formatting files: {error}')
 
@@ -215,6 +222,41 @@ def format_fact_sales_order(sales_order_df):
         "agreed_delivery_location_id"
     ]]
     return fact_sales_order
+
+
+def format_fact_purchase_order(purchase_order_df):
+    """ Formats purchase_order dataframe into correctly formatted dataframe.
+    Args:
+        purchase_order_df: dataframe of data from purchase_order.csv.
+    Returns:
+        dataframe of correctly formatted purchase order data.
+    """
+    purchase_order_df["purchase_record_id"] = range(1, 1+len(purchase_order_df))
+    purchase_order_df["created_date"] = purchase_order_df["created_at"].dt.date
+    purchase_order_df["created_time"] = purchase_order_df["created_at"].dt.time
+    purchase_order_df["last_updated_date"] = purchase_order_df[
+        "last_updated"].dt.date
+    purchase_order_df["last_updated_time"] = purchase_order_df[
+        "last_updated"].dt.time
+
+    fact_purchase_order = purchase_order_df[[
+        "purchase_record_id",
+        "purchase_order_id",
+        "created_date",
+        "created_time",
+        "last_updated_date",
+        "last_updated_time",
+        "staff_id",
+        "counterparty_id",
+        "item_code",
+        "item_quantity",
+        "item_unit_price",
+        "currency_id",
+        "agreed_delivery_date",
+        "agreed_payment_date",
+        "agreed_delivery_location_id"
+    ]]
+    return fact_purchase_order
 
 
 def load_csv_from_s3(bucket, key, parse_dates=[]):
