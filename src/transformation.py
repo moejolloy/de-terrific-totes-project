@@ -27,7 +27,8 @@ def transform_data(event, context):
     processed_bucket = "terrific-totes-processed-bucket-500"
 
     files_list = ["staff.csv", "department.csv", "address.csv",
-                  "design.csv", "counterparty.csv", "currency.csv"]
+                  "design.csv", "counterparty.csv", "transaction.csv",
+                  "payment_type.csv", "currency.csv"]
     try:
         df_list = [load_csv_from_s3(
             bucket, file, parse_dates=["created_at", "last_updated"])
@@ -37,8 +38,17 @@ def transform_data(event, context):
                                                     "last_updated",
                                                     "agreed_delivery_date",
                                                     "agreed_payment_date"])
+        purchase_order_df = load_csv_from_s3(
+            bucket, "purchase_order.csv", parse_dates=["created_at",
+                                                       "last_updated",
+                                                       "agreed_delivery_date",
+                                                       "agreed_payment_date"])
+        payment_df = load_csv_from_s3(
+            bucket, "payment.csv", parse_dates=["created_at",
+                                                "last_updated",
+                                                "payment_date"])
         (staff_df, dept_df, address_df, design_df, counterparty_df,
-         currency_df) = df_list
+         transaction_df, payment_type_df, currency_df) = df_list
     except Exception as error:
         logger.error(f'Error when retrieving files: {error}')
 
@@ -52,8 +62,16 @@ def transform_data(event, context):
         files_dict["dim_currency.parquet"] = format_dim_currency(currency_df)
         files_dict["dim_counterparty.parquet"] = format_dim_counterparty(
             counterparty_df, address_df)
+        files_dict["dim_transaction.parquet"] = format_dim_transaction(
+            transaction_df)
+        files_dict["dim_payment_type.parquet"] = format_dim_payment_type(
+            payment_type_df)
         files_dict["fact_sales_order.parquet"] = format_fact_sales_order(
             sales_order_df)
+        files_dict["fact_purchase_order.parquet"] = format_fact_purchase_order(
+            purchase_order_df)
+        files_dict["fact_payment.parquet"] = format_fact_payment(
+            payment_df)
     except Exception as error:
         logger.error(f'Error when formatting files: {error}')
 
@@ -182,6 +200,29 @@ def format_dim_counterparty(counterparty_df, address_df):
     return dim_counterparty
 
 
+def format_dim_transaction(transaction_df):
+    """ Formats transaction dataframe into correctly formatted dataframe.
+    Args:
+        transaction_df: dataframe containing data from transaction.csv.
+    Returns:
+        dataframe of correctly formatted transaction data.
+    """
+
+    return transaction_df[["transaction_id", "transaction_type",
+                           "sales_order_id", "purchase_order_id"]]
+
+
+def format_dim_payment_type(payment_df):
+    """ Formats payment dataframe into correctly formatted dataframe.
+    Args:
+        payment_df: dataframe containing data from payment.csv.
+    Returns:
+        dataframe of correctly formatted payment data.
+    """
+
+    return payment_df[["payment_type_id", "payment_type_name"]]
+
+
 def format_fact_sales_order(sales_order_df):
     """ Formats sales_order dataframe into correctly formatted dataframe.
     Args:
@@ -215,6 +256,75 @@ def format_fact_sales_order(sales_order_df):
         "agreed_delivery_location_id"
     ]]
     return fact_sales_order
+
+
+def format_fact_purchase_order(purchase_order_df):
+    """ Formats purchase_order dataframe into correctly formatted dataframe.
+    Args:
+        purchase_order_df: dataframe of data from purchase_order.csv.
+    Returns:
+        dataframe of correctly formatted purchase order data.
+    """
+    purchase_order_df["purchase_record_id"] = range(
+        1, 1+len(purchase_order_df))
+    purchase_order_df["created_date"] = purchase_order_df["created_at"].dt.date
+    purchase_order_df["created_time"] = purchase_order_df["created_at"].dt.time
+    purchase_order_df["last_updated_date"] = purchase_order_df[
+        "last_updated"].dt.date
+    purchase_order_df["last_updated_time"] = purchase_order_df[
+        "last_updated"].dt.time
+
+    fact_purchase_order = purchase_order_df[[
+        "purchase_record_id",
+        "purchase_order_id",
+        "created_date",
+        "created_time",
+        "last_updated_date",
+        "last_updated_time",
+        "staff_id",
+        "counterparty_id",
+        "item_code",
+        "item_quantity",
+        "item_unit_price",
+        "currency_id",
+        "agreed_delivery_date",
+        "agreed_payment_date",
+        "agreed_delivery_location_id"
+    ]]
+    return fact_purchase_order
+
+
+def format_fact_payment(payment_df):
+    """ Formats payment dataframe into correctly formatted dataframe.
+    Args:
+        payment_df: dataframe of data from payment.csv.
+    Returns:
+        dataframe of correctly formatted payment data.
+    """
+    payment_df["payment_record_id"] = range(1, 1+len(payment_df))
+    payment_df["created_date"] = payment_df["created_at"].dt.date
+    payment_df["created_time"] = payment_df["created_at"].dt.time
+    payment_df["last_updated_date"] = payment_df[
+        "last_updated"].dt.date
+    payment_df["last_updated_time"] = payment_df[
+        "last_updated"].dt.time
+
+    fact_payment = payment_df[[
+        "payment_record_id",
+        "payment_id",
+        "created_date",
+        "created_time",
+        "last_updated_date",
+        "last_updated_time",
+        "transaction_id",
+        "counterparty_id",
+        "payment_amount",
+        "currency_id",
+        "payment_type_id",
+        "paid",
+        "payment_date"
+    ]]
+    return fact_payment
 
 
 def load_csv_from_s3(bucket, key, parse_dates=[]):
