@@ -6,6 +6,8 @@ from src.transformation import (format_dim_staff,
                                 format_dim_date,
                                 format_dim_currency,
                                 format_dim_counterparty,
+                                format_dim_transaction,
+                                format_dim_payment_type,
                                 format_fact_sales_order,
                                 format_fact_purchase_order,
                                 transform_data)
@@ -102,6 +104,39 @@ def test_format_dim_design_returns_expected_output():
     }
     dim_design_df = pd.DataFrame(data=test_dim_design_data)
     assert format_dim_design(design_df).equals(dim_design_df)
+
+
+def test_format_dim_transaction_returns_expected_output():
+    transaction_data = {
+        "transaction_id": [1, 2, 3],
+        "transaction_type": ["type1", "type2", "type3"],
+        "sales_order_id": [1, 2, 3],
+        "purchase_order_id": [1, 2, 3]
+    }
+    transaction_df = pd.DataFrame(data=transaction_data)
+
+    test_dim_transaction_data = {
+        "transaction_id": [1, 2, 3],
+        "transaction_type": ["type1", "type2", "type3"],
+        "sales_order_id": [1, 2, 3],
+        "purchase_order_id": [1, 2, 3]
+    }
+    dim_transaction_df = pd.DataFrame(data=test_dim_transaction_data)
+    assert format_dim_transaction(transaction_df).equals(dim_transaction_df)
+
+def test_format_dim_payment_type_returns_expected_output():
+    payment_type_data = {
+        "payment_type_id": [1, 2, 3],
+        "payment_type_name": ["name1", "name2", "name3"]
+    }
+    payment_type_df = pd.DataFrame(data=payment_type_data)
+
+    test_dim_payment_type_data = {
+        "payment_type_id": [1, 2, 3],
+        "payment_type_name": ["name1", "name2", "name3"]
+    }
+    dim_payment_type_df = pd.DataFrame(data=test_dim_payment_type_data)
+    assert format_dim_payment_type(payment_type_df).equals(dim_payment_type_df)
 
 
 def test_format_dim_date_returns_expected_output():
@@ -302,6 +337,8 @@ def test_transform_data(mock_load, mock_export):
     files_dict["dim_date.parquet"] = True
     files_dict["dim_currency.parquet"] = True
     files_dict["dim_counterparty.parquet"] = True
+    files_dict["dim_transaction.parquet"] = True
+    files_dict["dim_payment_type.parquet"] = True
     files_dict["fact_sales_order.parquet"] = True
     files_dict["fact_purchase_order.parquet"] = True
     assert transform_data({}, {}) == files_dict
@@ -381,6 +418,20 @@ def load_func(bucket, file, parse_dates=[]):
                 test_datetime]
         }
         return pd.DataFrame(data=counterparty_data)
+    elif file == "transaction.csv":
+        transaction_data = {
+            "transaction_id": [1, 2, 3],
+            "transaction_type": ["type1", "type2", "type3"],
+            "sales_order_id": [1, 2, 3],
+            "purchase_order_id": [1, 2, 3]
+        }
+        return pd.DataFrame(data=transaction_data)
+    elif file == "payment_type.csv":
+        payment_type_data = {
+            "payment_type_id": [1, 2, 3],
+            "payment_type_name": ["name1", "name2", "name3"]
+        }
+        return pd.DataFrame(data=payment_type_data)
     elif file == "currency.csv":
         currency_data = {
             'currency_id': [1, 2, 3],
@@ -454,6 +505,10 @@ def load_func_error(bucket, file, parse_dates=[]):
     elif file == "departments.csv":
         return True
     elif file == "counterparty.csv":
+        return True
+    elif file == "transaction.csv":
+        return True
+    elif file == "payment_type.csv":
         return True
     elif file == "currency.csv":
         return True

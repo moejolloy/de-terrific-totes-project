@@ -27,7 +27,8 @@ def transform_data(event, context):
     processed_bucket = "terrific-totes-processed-bucket-100"
 
     files_list = ["staff.csv", "department.csv", "address.csv",
-                  "design.csv", "counterparty.csv", "currency.csv"]
+                  "design.csv", "counterparty.csv", "transaction.csv",
+                  "payment_type.csv", "currency.csv"]
     try:
         df_list = [load_csv_from_s3(
             bucket, file, parse_dates=["created_at", "last_updated"])
@@ -43,7 +44,7 @@ def transform_data(event, context):
                                                        "agreed_delivery_date",
                                                        "agreed_payment_date"])
         (staff_df, dept_df, address_df, design_df, counterparty_df,
-         currency_df) = df_list
+        transaction_df, payment_type_df, currency_df) = df_list
     except Exception as error:
         logger.error(f'Error when retrieving files: {error}')
 
@@ -57,6 +58,10 @@ def transform_data(event, context):
         files_dict["dim_currency.parquet"] = format_dim_currency(currency_df)
         files_dict["dim_counterparty.parquet"] = format_dim_counterparty(
             counterparty_df, address_df)
+        files_dict["dim_transaction.parquet"] = format_dim_transaction(
+            transaction_df)
+        files_dict["dim_payment_type.parquet"] = format_dim_payment_type(
+            payment_type_df)        
         files_dict["fact_sales_order.parquet"] = format_fact_sales_order(
             sales_order_df)
         files_dict["fact_purchase_order.parquet"] = format_fact_purchase_order(
@@ -187,6 +192,28 @@ def format_dim_counterparty(counterparty_df, address_df):
     })
 
     return dim_counterparty
+
+
+def format_dim_transaction(transaction_df):
+    """ Formats transaction dataframe into correctly formatted dataframe.
+    Args:
+        transaction_df: dataframe containing data from transaction.csv.
+    Returns:
+        dataframe of correctly formatted transaction data.
+    """
+
+    return transaction_df[["transaction_id", "transaction_type", "sales_order_id", "purchase_order_id"]]
+
+
+def format_dim_payment_type(payment_df):
+    """ Formats payment dataframe into correctly formatted dataframe.
+    Args:
+        payment_df: dataframe containing data from payment.csv.
+    Returns:
+        dataframe of correctly formatted payment data.
+    """
+
+    return payment_df[["payment_type_id", "payment_type_name"]]
 
 
 def format_fact_sales_order(sales_order_df):
