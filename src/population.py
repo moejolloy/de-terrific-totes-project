@@ -185,7 +185,9 @@ def insert_data_into_db(data, table):
             logger.info(f'Clearing data from table: {table}')
             query = f'INSERT INTO {table} VALUES %s;'
             if table == 'dim_transaction':
-                logger.info(data)
+                for value in data:
+                    value[2] = int(value[2]) if value[2] is not None else None
+                    value[3] = int(value[3]) if value[3] is not None else None
             psycopg2.extras.execute_values(cursor, query, data)
             logger.info(f'Inserting data into table: {table}')
             conn.commit()
