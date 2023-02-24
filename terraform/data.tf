@@ -29,6 +29,7 @@ data "archive_file" "population_lambda_zipper" {
 resource "null_resource" "pip_install_ingestion_dependencies" {
   triggers = {
     shell_hash = "${sha256(file("${path.module}/../ingestion_dependencies.txt"))}"
+    always_run = "${timestamp()}"
   }
 
   provisioner "local-exec" {
@@ -50,6 +51,7 @@ resource "null_resource" "copy_ingestion_file_for_zipping" {
 resource "null_resource" "pip_install_processing_dependencies" {
   triggers = {
     shell_hash = "${sha256(file("${path.module}/../processing_dependencies.txt"))}"
+    always_run = "${timestamp()}"
   }
 
   provisioner "local-exec" {
@@ -71,6 +73,7 @@ resource "null_resource" "copy_processing_file_for_zipping" {
 resource "null_resource" "pip_install_population_dependencies" {
   triggers = {
     shell_hash = "${sha256(file("${path.module}/../population_dependencies.txt"))}"
+    always_run = "${timestamp()}"
   }
 
   provisioner "local-exec" {
