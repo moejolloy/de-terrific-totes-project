@@ -53,6 +53,16 @@ def lambda_handler(event, context):
         logger.error(err)
     else:
         results_dict['fact_sales_order'] = True
+    
+    results_dict['fact_purchase_order'] = False
+    try:
+        df = load_parquet_from_s3(BUCKET, "fact_purchase_order.parquet")
+        rows = df.values.tolist()
+        insert_data_into_db(rows, 'fact_purchase_order')
+    except Exception as err:
+        logger.error(err)
+    else:
+        results_dict['fact_purchase_order'] = True
     finally:
         logger.info(results_dict)
         return results_dict
@@ -140,8 +150,14 @@ def insert_data_into_db(data, table):
     else:
         try:
             cursor.execute('SELECT * FROM fact_sales_order;')
-            if len(cursor.fetchall()) > 0 and (table != 'fact_sales_order'):
+            fso_results = cursor.fetchall()
+            cursor.execute('SELECT * FROM fact_purchase_order;')
+            fpo_results = cursor.fetchall()
+            if ((len(fso_results) > 0) or (len(fpo_results) > 0)) and (
+                table not in  ['fact_sales_order', 'fact_purchase_order']):
                 cursor.execute('DELETE FROM fact_sales_order;')
+                conn.commit()
+                cursor.execute('DELETE FROM fact_purchase_order;')
                 conn.commit()
 
             cursor.execute(f'DELETE FROM {table};')
