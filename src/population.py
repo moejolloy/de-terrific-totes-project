@@ -185,9 +185,13 @@ def insert_data_into_db(data, table):
             logger.info(f'Clearing data from table: {table}')
             query = f'INSERT INTO {table} VALUES %s;'
             if table == 'dim_transaction':
+                df = pd.DataFrame(data)
+                df = df.fillna(-1)
+                data = df.values.tolist()
                 for value in data:
-                    value[2] = int(value[2]) if value[2] is not None else None
-                    value[3] = int(value[3]) if value[3] is not None else None
+                    value[2] = int(value[2]) if value[2] is not -1 else None
+                    value[3] = int(value[3]) if value[3] is not -1 else None
+                logger.info(data)
             psycopg2.extras.execute_values(cursor, query, data)
             logger.info(f'Inserting data into table: {table}')
             conn.commit()
