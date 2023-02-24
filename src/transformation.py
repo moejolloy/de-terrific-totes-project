@@ -23,8 +23,8 @@ def transform_data(event, context):
         a dictionary with keys of the files to be uploaded
         values True if file successfully processed, else None.
     """
-    bucket = "terrific-totes-ingest-bucket-100"
-    processed_bucket = "terrific-totes-processed-bucket-100"
+    bucket = "terrific-totes-ingest-bucket-500"
+    processed_bucket = "terrific-totes-processed-bucket-500"
 
     files_list = ["staff.csv", "department.csv", "address.csv",
                   "design.csv", "counterparty.csv", "transaction.csv",
@@ -48,7 +48,7 @@ def transform_data(event, context):
                                                 "last_updated",
                                                 "payment_date"])
         (staff_df, dept_df, address_df, design_df, counterparty_df,
-        transaction_df, payment_type_df, currency_df) = df_list
+         transaction_df, payment_type_df, currency_df) = df_list
     except Exception as error:
         logger.error(f'Error when retrieving files: {error}')
 
@@ -65,7 +65,7 @@ def transform_data(event, context):
         files_dict["dim_transaction.parquet"] = format_dim_transaction(
             transaction_df)
         files_dict["dim_payment_type.parquet"] = format_dim_payment_type(
-            payment_type_df)        
+            payment_type_df)
         files_dict["fact_sales_order.parquet"] = format_fact_sales_order(
             sales_order_df)
         files_dict["fact_purchase_order.parquet"] = format_fact_purchase_order(
@@ -208,7 +208,8 @@ def format_dim_transaction(transaction_df):
         dataframe of correctly formatted transaction data.
     """
 
-    return transaction_df[["transaction_id", "transaction_type", "sales_order_id", "purchase_order_id"]]
+    return transaction_df[["transaction_id", "transaction_type",
+                           "sales_order_id", "purchase_order_id"]]
 
 
 def format_dim_payment_type(payment_df):
@@ -264,7 +265,8 @@ def format_fact_purchase_order(purchase_order_df):
     Returns:
         dataframe of correctly formatted purchase order data.
     """
-    purchase_order_df["purchase_record_id"] = range(1, 1+len(purchase_order_df))
+    purchase_order_df["purchase_record_id"] = range(
+        1, 1+len(purchase_order_df))
     purchase_order_df["created_date"] = purchase_order_df["created_at"].dt.date
     purchase_order_df["created_time"] = purchase_order_df["created_at"].dt.time
     purchase_order_df["last_updated_date"] = purchase_order_df[

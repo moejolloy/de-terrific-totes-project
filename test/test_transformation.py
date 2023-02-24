@@ -125,6 +125,7 @@ def test_format_dim_transaction_returns_expected_output():
     dim_transaction_df = pd.DataFrame(data=test_dim_transaction_data)
     assert format_dim_transaction(transaction_df).equals(dim_transaction_df)
 
+
 def test_format_dim_payment_type_returns_expected_output():
     payment_type_data = {
         "payment_type_id": [1, 2, 3],
@@ -321,7 +322,8 @@ def test_format_fact_purchase_order_returns_expected_output():
         "agreed_delivery_location_id": [1, 2, 3]
     }
     fact_purchase_order_df = pd.DataFrame(data=test_fact_purchase_order_data)
-    assert format_fact_purchase_order(purchase_order_df).equals(fact_purchase_order_df)
+    assert format_fact_purchase_order(purchase_order_df).equals(
+        fact_purchase_order_df)
 
 
 def test_format_fact_payment_returns_expected_output():

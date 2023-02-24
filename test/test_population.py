@@ -158,7 +158,7 @@ def load_df(bucket, key, parse_dates=[]):
             "payment_type_id": [1, 2, 3],
             "payment_type_name": ["name1", "name2", "name3"],
             "created_at": [test_datetime, test_datetime, test_datetime],
-            "last_updated": [test_datetime, test_datetime, test_datetime]  
+            "last_updated": [test_datetime, test_datetime, test_datetime]
         }
         return pd.DataFrame(data=payment_type_data)
     elif key == "dim_currency.parquet":

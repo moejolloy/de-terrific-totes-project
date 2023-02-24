@@ -32,7 +32,7 @@ def lambda_handler(event, context):
                    'sales_order', 'counterparty', 'payment',
                    'payment_type', 'currency', 'department',
                    'purchase_order']
-    BUCKET = 'terrific-totes-ingest-bucket-100'
+    BUCKET = 'terrific-totes-ingest-bucket-500'
     INTERVAL = '30 minutes'
     has_updated = False
     columns = collect_column_headers(credentials, TABLES_LIST)
