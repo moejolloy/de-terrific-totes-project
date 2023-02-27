@@ -1,36 +1,41 @@
 # de-terrific-totes-project
-Data Engineering Bootcamp Final Project
-To test code for pep8 compliance and unit tests on push, enter branch name on
-line 6 and uncomment code.
 
-manual deployment:
-do this first - change the bucket name to relevent state bucket
-- aws s3 mb s3://terraform-state-bucket-totedd-500
+**Project Summary**
 
+- corresponds to Data section of Joe's [project specification](https://github.com/northcoders/de-project-specification) repo.
+- keep Terrific Totes/business requirements at forefront of your mind when writing this section. i.e Terrific totes want the data to be in this format!
 
-FROM TERRAFORM README:
-ingest bucket named ingest-bucket-totedd-1402
-processed bucket named processed-bucket-totedd-1402
+**Directions for Deployment**
 
-required_version = "~> 1.3.7" in backend.tf means must have terraform 1.3.7 to 1.3.9
+Split deploying the infrastructure into two sections - locally and using Github Actions with a fork of the repo
+1. Using Github actions:
+	- save database credentials, warehouse credentials and AWS access and secret keys as 4 separate GitHub actions secrets.
+	- Take note of correct formatting of data warehouse and database credentials - make an example of this in file.
+	- Either select manual workflow deployment on github actions page, or push some code to main branch
+2. Locally:
+	- run 'make all' command in root directory
+	-  aws configure using aws login details
+	-  run aws sts get-caller-identity to check you are logged in correctly
+	- run the terraform state bucket creation command
+    ```sh
+    aws s3 mb s3://terraform-state-bucket-totedd-<INSERT-BUCKET-NAME-HERE>
+    ```
+	- run terraform init - reconfigure
+	- terraform plan and apply (see note below)
+	- when Terraform applying, either use a secret.tfvars file saved in terraform folder, or input the database_info and warehouse_info manually. Note slightly different formats required - put an example below.
 
-Ingest Lambda has permission to read and write to ingest bucket
-Processed Lambda has permission to read only from ingest bucket
-Processed Lambda has permission to read and write to processed bucket
-Populate Lambda has permission to read only from processed bucket
-
-all lambda function names should refer to their appropriate variable in the vars.tf file.
-
-Each have their own roles
-
-For error subscriptions, python errors or exceptions should name the error raised in their f string i.e.
-
-        except InvalidFileTypeError:
-        logger.error(
-            f'InvalidFileTypeError {s3_object_name} is not a valid text file')
-
-When initialising Terraform please use 'terraform init -reconfigure' command instead of terraform init without argument. This sets up terraform correctly, and reconfigures the backend each time.
-
-NOTE: as of 15/02, ingestion.py prints Great Success every 2 minutes using a dummy handler function that will be overwritten during a merge. After merge, it should run the real ingestion handler every two minutes triggered via cloud_watch_events_bridge
+Note: for both local and Actions-based deployments, bucket names may need to be changed as AWS buckets must have unique names. List all instances of each bucket within file architecture.
 
 NOTE: the database credentials are stored locally in a .tfvars file and gitignored. Get secret.tfvars file from colleague and run 'terraform apply -var-file="secret.tfvars"' command.
+
+**How it Works**
+
+1. Python functions and tests
+2. Terraform code
+3. Makefile
+4. YAML file
+- pay attention to MVP section of Joe's  [project specification](https://github.com/northcoders/de-project-specification) repo here.
+
+**General notes**
+
+use [this](https://www.markdownguide.org/cheat-sheet/) Markdown shortcut syntax guide to make it look prettier!
