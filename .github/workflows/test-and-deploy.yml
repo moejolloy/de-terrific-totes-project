@@ -4,12 +4,12 @@ on:
   push:
     branches:
       - main
-    workflow_dispatch:
-      inputs:
-        environment:
-          type: string
-          default: dev
-          required: false
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: string
+        default: dev
+        required: false
 
 env:
   database_credentials: ${{ secrets.DATABASE_CREDENTIALS }}
