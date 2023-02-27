@@ -22,6 +22,7 @@ resource "aws_cloudwatch_metric_alarm" "ingestion_lambda_complete" {
   statistic           = "SampleCount"
   alarm_actions       = ["arn:aws:sns:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trigger_processing_lambda_topic"]
 }
+
 resource "aws_sns_topic" "trigger_processing_lambda_topic" {
   name = "trigger_processing_lambda_topic"
 }
@@ -39,7 +40,6 @@ resource "aws_lambda_permission" "allow_sns_to_trigger_processing_lambda" {
   source_arn     = aws_sns_topic.trigger_processing_lambda_topic.arn
   source_account = data.aws_caller_identity.current.account_id
 }
-
 
 resource "aws_cloudwatch_log_metric_filter" "processing_lambda_success" {
   name           = "processing_lambda_success"

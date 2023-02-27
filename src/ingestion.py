@@ -8,6 +8,7 @@ import botocore.errorfactory
 import pandas as pd
 from io import StringIO
 import json
+import os
 
 
 logger = logging.getLogger("ingestion")
@@ -32,7 +33,7 @@ def lambda_handler(event, context):
                    'sales_order', 'counterparty', 'payment',
                    'payment_type', 'currency', 'department',
                    'purchase_order']
-    BUCKET = 'terrific-totes-ingest-bucket-500'
+    BUCKET = os.environ.get('TF_ING_BUCKET')
     INTERVAL = '30 minutes'
     has_updated = False
     columns = collect_column_headers(credentials, TABLES_LIST)
