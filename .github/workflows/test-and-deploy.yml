@@ -4,12 +4,13 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:
-    inputs:
-      environment:
-        type: string
-        default: dev
-        required: false
+  if: github.ref == 'refs/heads/main'
+    workflow_dispatch:
+      inputs:
+        environment:
+          type: string
+          default: dev
+          required: false
 
 env:
   database_credentials: ${{ secrets.DATABASE_CREDENTIALS }}
