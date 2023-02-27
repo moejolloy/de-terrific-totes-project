@@ -28,12 +28,12 @@ data "archive_file" "population_lambda_zipper" {
 
 resource "null_resource" "pip_install_ingestion_dependencies" {
   triggers = {
-    shell_hash = "${sha256(file("${path.module}/../ingestion_dependencies.txt"))}"
+    shell_hash = "${sha256(file("${path.module}/ingestion_dependencies.txt"))}"
     always_run = "${timestamp()}"
   }
 
   provisioner "local-exec" {
-    command = "pip install -r ../ingestion_dependencies.txt -t ${path.module}/../zips/ingestion_files"
+    command = "pip install -r ingestion_dependencies.txt -t ${path.module}/../zips/ingestion_files"
   }
 }
 
@@ -50,12 +50,12 @@ resource "null_resource" "copy_ingestion_file_for_zipping" {
 
 resource "null_resource" "pip_install_processing_dependencies" {
   triggers = {
-    shell_hash = "${sha256(file("${path.module}/../processing_dependencies.txt"))}"
+    shell_hash = "${sha256(file("${path.module}/processing_dependencies.txt"))}"
     always_run = "${timestamp()}"
   }
 
   provisioner "local-exec" {
-    command = "pip install -r ../processing_dependencies.txt -t ${path.module}/../zips/processing_files"
+    command = "pip install -r processing_dependencies.txt -t ${path.module}/../zips/processing_files"
   }
 }
 
@@ -72,12 +72,12 @@ resource "null_resource" "copy_processing_file_for_zipping" {
 
 resource "null_resource" "pip_install_population_dependencies" {
   triggers = {
-    shell_hash = "${sha256(file("${path.module}/../population_dependencies.txt"))}"
+    shell_hash = "${sha256(file("${path.module}/population_dependencies.txt"))}"
     always_run = "${timestamp()}"
   }
 
   provisioner "local-exec" {
-    command = "pip install -r ../population_dependencies.txt -t ${path.module}/../zips/population_files"
+    command = "pip install -r population_dependencies.txt -t ${path.module}/../zips/population_files"
   }
 }
 
