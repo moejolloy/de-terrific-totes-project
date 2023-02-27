@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-  if: github.ref == 'refs/heads/main'
     workflow_dispatch:
       inputs:
         environment:
@@ -46,13 +45,14 @@ jobs:
     name: install aws cli
     needs: final-test
     runs-on: ubuntu-latest
-    steps:
-      - name: download aws cli
-        run: curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-      - name: unzip
-        run: unzip awscliv2.zip
-      - name: install
-        run: sudo ./aws/install --update
+    if: github.ref == 'refs/heads/main'
+      steps:
+        - name: download aws cli
+          run: curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+        - name: unzip
+          run: unzip awscliv2.zip
+        - name: install
+          run: sudo ./aws/install --update
 
   create-state-file-bucket:
     name: create state-file.tf bucket
