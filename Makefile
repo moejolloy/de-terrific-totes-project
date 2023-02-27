@@ -80,3 +80,6 @@ check-coverage:
 
 ## Run all checks
 run-checks: security-test run-flake unit-test check-coverage
+
+## Run all makefile commands
+all: requirements dev-setup run-checks
