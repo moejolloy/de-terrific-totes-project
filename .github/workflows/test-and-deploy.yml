@@ -85,10 +85,6 @@ jobs:
         uses: actions/setup-python@v4.5.0
         with:
           python-version: "3.9"
-      # - name: Manual Pip install of Processing Dependencies
-      #   run: pip install -r ./terraform/lambda-dependencies/processing-dependencies.txt -t ./terraform/zips/processing-files
-      # - name: Manual Pip install of Population Dependencies
-      #   run: pip install -r ./terraform/lambda-dependencies/population_dependencies.txt -t ./terraform/zips/population-files
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
       - name: Terraform Init
