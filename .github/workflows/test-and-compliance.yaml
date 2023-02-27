@@ -15,6 +15,7 @@ jobs:
   unit-test-and-pep8-compliance:
     name: unit-test and pep8 compliance
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v3.3.0
