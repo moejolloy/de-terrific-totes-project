@@ -40,6 +40,7 @@ jobs:
 
   validate-terraform-code:
     name: validate terraform code
+    needs: unit-test-and-pep8-compliance
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
