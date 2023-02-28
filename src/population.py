@@ -24,7 +24,7 @@ def lambda_handler(event, context):
 
     Returns:
         Dictionary with keys of table names whos values are booleans
-        signifiying if the data was sucsessfully inserted into the
+        signifiying if the data was sucsessfully updated in the
         Data Warehouse or not.
     """
     BUCKET = os.environ.get('TF_PRO_BUCKET')
@@ -114,63 +114,6 @@ def load_parquet_from_s3(bucket, key):
         raise RuntimeError
 
 
-def insert_data_into_db_old(data, table):
-    """ Insert data into tables within the Data Warehouse DB
-
-    Args:
-        data: list of lists representing the rows to insert into the table
-        table: string of the table name in which to insert data
-
-    Returns:
-        None
-    """
-    try:
-        credentials = get_secret_value('warehouse_credentials')
-        conn = get_warehouse_connection(credentials)
-        cursor = conn.cursor()
-    except Exception as err:
-        logger.error(err)
-    else:
-        try:
-            cursor.execute('SELECT * FROM fact_sales_order;')
-            fso_results = cursor.fetchall()
-            cursor.execute('SELECT * FROM fact_purchase_order;')
-            fpo_results = cursor.fetchall()
-            cursor.execute('SELECT * FROM fact_payment;')
-            fp_results = cursor.fetchall()
-            if (
-                (len(fso_results) > 0) or (
-                    len(fpo_results) > 0) or (
-                    len(fp_results) > 0)) and (
-                    table not in ['fact_sales_order',
-                                  'fact_purchase_order',
-                                  'fact_payment']):
-                cursor.execute('DELETE FROM fact_sales_order;')
-                conn.commit()
-                cursor.execute('DELETE FROM fact_purchase_order;')
-                conn.commit()
-                cursor.execute('DELETE FROM fact_payment;')
-                conn.commit()
-
-            cursor.execute(f'DELETE FROM {table};')
-            logger.info(f'Clearing data from table: {table}')
-            query = f'INSERT INTO {table} VALUES %s;'
-            if table == 'dim_transaction':
-                df = pd.DataFrame(data)
-                df.replace({np.nan: None}, inplace=True)
-                data = df.values.tolist()
-            psycopg2.extras.execute_values(cursor, query, data)
-            logger.info(f'Inserting data into table: {table}')
-            conn.commit()
-            logger.info(f'Changes commited to table: {table}')
-        except Exception as err:
-            logger.error(err)
-        finally:
-            cursor.close()
-            conn.close()
-            logger.info('Connection closed successfully')
-
-
 def get_warehouse_connection(credentials):
     """ Establish connection to the Data Warehouse DB
 
@@ -193,7 +136,7 @@ def insert_data_into_db(data_df, table):
     """ Insert data into tables within the Data Warehouse DB
 
     Args:
-        data: DataFrame representing the rows to insert into the table
+        data: DataFrame representing the data to insert into the table
         table: string of the table name in which to insert data
 
     Returns:
@@ -228,14 +171,12 @@ def insert_data_into_db(data_df, table):
                 "fact_sales_order": "sales_order_id"
             }
 
-            # DataFrame of table with titles.
             dw_query = f'SELECT * FROM {table};'
             cursor.execute(dw_query)
             dw_table = cursor.fetchall()
             dw_table_titles = [col[0] for col in cursor.description]
             dw_df = pd.DataFrame(dw_table, columns=dw_table_titles)
 
-            # Individual table type modifications.
             TROUBLE_TABLES = {
                 "dim_date": {
                     'date_id': 'datetime64[ns]'
@@ -263,19 +204,16 @@ def insert_data_into_db(data_df, table):
                 else:
                     dw_df = dw_df.astype(TROUBLE_TABLES[table])
 
-            # Determine new and updated rows through comparison.
             df_all = data_df.merge(
                 dw_df, on=dw_table_titles, how='left', indicator=True)
             df_all = df_all.drop(df_all[df_all['_merge'] == 'both'].index)
             new_and_updated = df_all[df_all.columns[:-1]]
 
-            # Deal with NULL values in integer column.
             if table == 'dim_transaction':
                 new_and_updated = new_and_updated.astype(
                     {'sales_order_id': 'Int64', 'purchase_order_id': 'Int64'})
                 new_and_updated = new_and_updated.replace({np.nan: None})
 
-            # Updated and new rows as list of lists (rows).
             updated_rows = new_and_updated[
                 new_and_updated[KEY[f'{table}']].isin(
                     dw_df[KEY[f'{table}']])].values.tolist()
@@ -283,7 +221,6 @@ def insert_data_into_db(data_df, table):
                 ~new_and_updated[KEY[f'{table}']].isin(
                     dw_df[KEY[f'{table}']])].values.tolist()
 
-            # Insert new rows into DB.
             logger.info(f'New rows to insert: {len(new_rows)}')
             if len(new_rows) > 0:
                 new_query = f'INSERT INTO {table} VALUES %s;'
@@ -292,7 +229,6 @@ def insert_data_into_db(data_df, table):
                 conn.commit()
                 logger.info(f'New data commited to table: {table}')
 
-            # Update existing rows that have been changed.
             logger.info(f'Existing rows to update: {len(updated_rows)}')
             if len(updated_rows) > 0:
                 update_cols = ', '.join(
