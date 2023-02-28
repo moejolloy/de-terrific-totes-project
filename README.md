@@ -48,9 +48,9 @@ The overall structure of the resulting [data warehouse](https://dbdiagram.io/d/6
     align = top
 />
 
----
+[(Back to top)](#de-terrific-totes-project)
 
-[(Back to top)](#table-of-contents)
+---
 
 ## Directions for Deployment
 
@@ -77,13 +77,7 @@ There are two primary ways of deploying the infrastructure and functionality con
 		#### Database and Data Warehouse Credentials Formatting:
 
 		```json
-		{
-			"host" : "somewhere-on-internet", 
-			"port" : "5432", 
-			"database" : "dummy", 
-			"user" : "dummy", 
-			"password" : "your-password"
-		}
+		{"host" : "somewhere-on-internet", "port" : "5432", "database": "dummy", "user" : "dummy", "password" : "your-password"}
 		```
 
 	- Change the name of the bucket for storing the Terraform state file in **backend.tf** and **test-and-deploy.yml** files. This will ensure a unique bucket is created.
@@ -129,13 +123,13 @@ There are two primary ways of deploying the infrastructure and functionality con
 	- When using both `terraform plan` and `terraform apply` commands, terraform will prompt you to provide the sensitive values database_info and warehouse_info. Use [this](#database-and-data-warehouse-credentials-formatting) template.
 	- To avoid manual input use a **secret.tfvars** file saved in the terraform folder and the command: `terraform apply -var-file="secret.tfvars"`.
 
-		#### Format Required for AWS to Parse Secrets as Key / Value Pairs in **secret.tfvars**
+		#### Format Required for AWS to Parse Secrets as Key / Value Pairs in secret.tfvars:
 
     	```
 		database_info = "{ \"host\" : \"some-where-on-internet\", \"port\" : \"8686\", \"database\" : \"dummy\", \"user\" : \"dummy\", \"password\" : \"my-pass" }"
 		```
 
-[(Back to top)](#table-of-contents)
+[(Back to top)](#de-terrific-totes-project)
 
 ---
 
@@ -269,6 +263,6 @@ This repository contains two YAML files to build our CI/CD pipeline:
 	- Creates a terraform **.tfstate** file on S3.
 	- Initialises terraform and runs `terraform apply` using the database and warehouse credentials from the Github repository secrets page.
 
-[(Back to top)](#table-of-contents)
+[(Back to top)](#de-terrific-totes-project)
 
 ---
