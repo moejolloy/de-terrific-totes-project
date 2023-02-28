@@ -63,7 +63,7 @@ There are two primary ways of deploying the infrastructure and functionality con
 	- From the Actions and Secrets page, click New Repository Secret.
 	- Create 4 repository secrets:
 
-		||
+		|Secret|
 		|:------|
 		|DATABASE_CREDENTIALS|
 		|DATA_WAREHOUSE_CREDENTIALS|
@@ -77,7 +77,7 @@ There are two primary ways of deploying the infrastructure and functionality con
 		#### Database and Data Warehouse Credentials Formatting:
 
 		```json
-		{ 
+		{
 			"host" : "somewhere-on-internet", 
 			"port" : "5432", 
 			"database" : "dummy", 
@@ -127,9 +127,9 @@ There are two primary ways of deploying the infrastructure and functionality con
 	- Apply `terraform init -reconfigure` to initialise terraform and use the state file bucket as a backend.
 	- Terraform plan and apply (see note below)
 	- When using both `terraform plan` and `terraform apply` commands, terraform will prompt you to provide the sensitive values database_info and warehouse_info. Use [this](#database-and-data-warehouse-credentials-formatting) template.
-	- To avoid manual input use a secret.tfvars file saved in the terraform folder and the command: `terraform apply -var-file="secret.tfvars"`.
+	- To avoid manual input use a **secret.tfvars** file saved in the terraform folder and the command: `terraform apply -var-file="secret.tfvars"`.
 
-		#### Format Required for AWS to Parse Secrets as Key / Value Pairs
+		#### Format Required for AWS to Parse Secrets as Key / Value Pairs in **secret.tfvars**
 
     	```
 		database_info = "{ \"host\" : \"some-where-on-internet\", \"port\" : \"8686\", \"database\" : \"dummy\", \"user\" : \"dummy\", \"password\" : \"my-pass" }"
@@ -139,14 +139,127 @@ There are two primary ways of deploying the infrastructure and functionality con
 
 ---
 
-**How it Works**
+## How it Works
 
-1. Python functions and tests
-2. Terraform code
-3. Makefile
-4. YAML file
-- pay attention to MVP section of Joe's  [project specification](https://github.com/northcoders/de-project-specification) repo here.
+1. [Python functions and tests]()
+2. [Terraform](#2-terraform)
+3. [Makefile](#3-makefile)
+4. [YAML](#4-yaml)
 
-**General notes**
+---
 
-use [this](https://www.markdownguide.org/cheat-sheet/) Markdown shortcut syntax guide to make it look prettier!
+### 2. Terraform
+
+The Terraform folder contains a collection of files and directories that are organized in a way that makes the code readable and easy to understand. Each directory and file serves a specific purpose, which 
+
+we'll explore in more detail below.
+#### **.terraform directory**
+
+- The .terraform directory typically holds the state file, which is used to keep track of the current state of the infrastructure. 
+- However, in this project, we've hosted the state file in an S3 bucket 
+on AWS, as required by the project.
+
+#### **lambda-dependencies directory**
+
+- The lambda-dependencies directory contains the necessary dependencies for each of the three lambda functions: the ingestion, processing, and population lambdas. 
+- These dependencies are then zipped and stored in their respective 
+folders in the zips directory.
+
+#### **zips directory**
+
+- The zips directory contains three sub-directories, each of which contains the zipped versions of the dependencies.txt files for the respective lambda functions.
+
+#### **.terraform.lock.hcl**
+
+- **Not really sure what this does**
+
+#### **alarm.tf**
+
+- The alarm.tf file contains the necessary elements of AWS alarms including:
+	- Cloudwatch log metric filters
+	- Cloudwatch metric alarms
+	- SNS topics and subscriptions
+	- Lambda permissions
+- Two lambda permissions were set up to allow SNS to trigger both the processing and population lambdas. 
+- The completion of the previous lambda function would raise an alarm status, which would then use the SNS triggers to initiate the appropriate lambda function.
+- Additional alarms were set up for each lambda function in case of an error. This would then send an email to the project email address: terrifictotedd@gmail.com
+
+#### **backend.tf**
+
+- The backend contains the bucket in which the terraform statefile is stored and states the required version of terraform which is **1.3.7** or later.
+```
+required_version  =  "~> 1.3.7"
+```
+
+#### **cloudwatch-iam.tf**
+
+- The cloudwatch-iam.tf file contains the neccessary aws iam policies, policy documents and policy attachments for cloudwatch.
+
+#### **data.tf**
+
+- The data.tf file copies the text file dependencies from the lambda-dependencies directory into their respective zips directory. Then these text files are zipped and the dependencies are installed to the lambda functions.
+
+#### **iam.tf**
+
+- The iam.tf file contains the neccessary aws iam policies, policy documents, policy attachments for the lambda functions. These include read/write access to the necessary buckets.
+
+#### **lambda.tf**
+
+- Contains the three lambda functions as well as the cloudwatch/eventbridge rules and permissions for the ingestion lambda.
+
+#### **s3.tf**
+
+- Contains the two AWS S3 buckets for ingested data and processed data.
+
+#### **secrets.tf**
+
+- Utilises AWS Secrets Manager to store the database and warehouse credentials.
+
+#### **vars.tf**
+
+- A file containing variables for other terraform files.
+
+---
+
+### 3. Makefile
+
+- A script file used to run validation checks on python code in the repository.
+- The Makefile can be run manually by running `Make all` in the cli.
+- The file contains commands to:
+	- Create the virtual environment.
+	- Install package requirments using **requirements.txt**.
+	- Install security, coverage and formating packages (bandit, safety, coverage, flake8).
+	- Run unit-tests using **pytest** and all validation packages.
+
+---
+
+### 4. YAML
+
+YAML files are used to enable agile practices such as continuous integration and deployment via [Github actions](https://docs.github.com/en/actions).
+
+This repository contains two YAML files to build our CI/CD pipeline:
+
+1. **test-and-compliance.yaml**
+2. **test-and-deploy.yaml**
+
+#### Test and Compliance
+
+- Runs on pull request to main or triggered manually on Github's actions page.
+- Two processes are run asynchronously:
+	- Running Makefile commands for validation:
+		- unit-tests
+		- compliance checks for security, flake8 formatting, and coverage
+	- Running Terraform Validate for **.tf** file syntax checks.
+
+#### Test and Deploy
+
+- Runs on push to main or triggered manually on Github's actions page (Can only be run from the **main** branch).
+- First runs the same testing code from Makefile for a final validation check.
+- Once all the validation passes it runs the processes required to seamlessly deploy our code infrastructure:
+	- Connects to AWS using credentials from to the Github repository secrets page.
+	- Creates a terraform state file on S3.
+	- Initialises terraform and runs `terraform apply` using the database and warehouse credentials from the Github repository secrets page.
+
+[(Back to top)](#table-of-contents)
+
+---
