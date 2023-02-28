@@ -47,8 +47,8 @@ def lambda_handler(event, context):
         else:
             results_dict[f'{table}'] = True
 
-        logger.info(results_dict)
-        return results_dict
+    logger.info(results_dict)
+    return results_dict
 
 
 def get_secret_value(secret_name):
