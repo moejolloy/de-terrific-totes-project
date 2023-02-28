@@ -108,7 +108,8 @@ There are two primary ways of deploying the infrastructure and functionality con
 	- set the name of the state bucket in the YAML file and Backend.tf file to match the bucket you have just created.
 	- Apply `terraform init -reconfigure` to initialise terraform and use the state file bucket as a backend.
 	- Terraform plan and apply (see note below)
-	- When using both terraform plan and terraform apply commands, terraform will prompt you to provide the sensitive values database_info and warehouse_info. Either input these manually or use a secret.tfvars file saved in the terraform folder.
+	- When using both `terraform plan` and `terraform apply` commands, terraform will prompt you to provide the sensitive values database_info and warehouse_info. 
+	- To avoid manual input use a secret.tfvars file saved in the terraform folder and the command: `terraform apply -var-file="secret.tfvars"`.
 
         The format required for AWS to parse the secrets as key/value pairs is as follows:
 	
