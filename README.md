@@ -15,7 +15,7 @@
 
 ## Table of Contents
 |Contents|
-|----------|
+|:----------|
 |[Project Summary](#project-summary)|
 |[Directions for Deployment](#directions-for-deployment)|
 |[How it Works]()|
@@ -28,7 +28,7 @@ A data platform that extracts data from an operational database, archives it in 
 
 ---
 
-The primary data source for the project is a database called `totesys` which is meant to simulate the back end data of a commercial application. The company `TerrificTotes` makes branded and customised tote bags for retail and corporate clients.
+The primary data source for the project is a database called **totesys** which is meant to simulate the back end data of a commercial application. The company **TerrificTotes** makes branded and customised tote bags for retail and corporate clients.
 Fake data from the sales and purchasing teams is inserted and updated into this database several times a day.
 
 The full ERD for the database is detailed [here](https://dbdiagram.io/d/6332fecf7b3d2034ffcaaa92).
@@ -61,14 +61,32 @@ There are two primary ways of deploying the infrastructure and functionality con
 	- In your version of the repo on GitHub, from it's main page, click on Settings, then Secrets And Variables, then Actions.
     - In your forked version of the repo on Github, click on Settings → Secrets And Variables → Actions.
 	- From the Actions and Secrets page, click New Repository Secret.
-	- Create 4 repository secrets: your database credentials as DATABASE_CREDENTIALS, data warehouse credentials as DATA_WAREHOUSE_CREDENTIALS, AWS access key as AWS_ACCESS_KEY and AWS secret key as AWS_SECRET_KEY. Note: as repository owner, only you can change the value of these secrets in future.
-	- The data warehouse and database credentials secrets must be formatted correctly to ensure they are successfully parsed as key/value pairs by AWS Secrets Manager. Format as follows:
+	- Create 4 repository secrets:
 
-	```json
-	{ "host" : "somewhere-on-internet", "port" : "5432", "database" : "dummy", "user" : "dummy", "password" : "your-password" }
-	```
+		||
+		|:------|
+		|DATABASE_CREDENTIALS|
+		|DATA_WAREHOUSE_CREDENTIALS|
+		|AWS_ACCESS_KEY|
+		|AWS_SECRET_KEY|
 
-	- Change the name of the bucket for storing the Terraform state file in backend.tf and in the YAML file. This will ensure a unique bucket is created.
+		- Note: as repository owner, only you can change the value of these secrets in future.
+
+	- The data warehouse and database credentials secrets must be formatted correctly to ensure they are successfully parsed as key/value pairs by AWS Secrets Manager.
+
+		#### Database and Data Warehouse Credentials Formatting:
+
+		```json
+		{ 
+			"host" : "somewhere-on-internet", 
+			"port" : "5432", 
+			"database" : "dummy", 
+			"user" : "dummy", 
+			"password" : "your-password"
+		}
+		```
+
+	- Change the name of the bucket for storing the Terraform state file in **backend.tf** and **test-and-deploy.yml** files. This will ensure a unique bucket is created.
 	- On your forked repo page, click on the Actions menu, then on the Final Test and Deploy workflow. Next to the notice that this repo has a workflow dispatch, click on Run Workflow, from main branch and in dev environment.
 	- In future, your code will redeploy when you push code to the main branch or trigger this dispatch again. You may wish to create branch protections and remove the workflow dispatch in the YAML file to ensure that this only happens with a degree of control.
 
@@ -77,9 +95,9 @@ There are two primary ways of deploying the infrastructure and functionality con
 	- Install Terraform as outlined [here](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli).
 	- In the root directory, set up a virtual environment with:
 
-	```sh
-	python -m venv venv
-	```
+		```sh
+		python -m venv venv
+		```
 
 	- Activate the environment using the following command:
 
@@ -87,15 +105,15 @@ There are two primary ways of deploying the infrastructure and functionality con
 		source venv/bin/activate
 		```
 
-		- Note: this repo will require you to use Python 3.9.16 as instructed in the .python-version file.
+		- Note: this repo will require you to use **Python 3.9.16** as instructed in the .python-version file.
 
 	- In the repo's root directory, run the following command in your terminal:
 	 	
-	```sh
-	make all
-	```
+		```sh
+		make all
+		```
 
-	- This instructs the Makefile to run it's 'all' command, which will install all the dev requirements needed in the requirements.txt file. The runtime requirements are handled within the Terraform infrastructure.
+	- This instructs the Makefile to run it's **'all'** command, which will install all the dev requirements needed in the requirements.txt file. The runtime requirements are handled within the Terraform infrastructure.
 
 	-  Use `aws configure` command, then enter in your AWS login details.
 	-  Run `aws sts get-caller-identity` to check you are logged in correctly.
@@ -105,14 +123,14 @@ There are two primary ways of deploying the infrastructure and functionality con
 		aws s3 mb s3://terraform-state-bucket-totedd-<SUFFIX>
 		```
 
-	- set the name of the state bucket in the YAML file and Backend.tf file to match the bucket you have just created.
+	- set the name of the state bucket in the **test-and-deploy.yml** and **backend.tf** files to match the bucket you have just created.
 	- Apply `terraform init -reconfigure` to initialise terraform and use the state file bucket as a backend.
 	- Terraform plan and apply (see note below)
-	- When using both `terraform plan` and `terraform apply` commands, terraform will prompt you to provide the sensitive values database_info and warehouse_info. 
+	- When using both `terraform plan` and `terraform apply` commands, terraform will prompt you to provide the sensitive values database_info and warehouse_info. Use [this](#database-and-data-warehouse-credentials-formatting) template.
 	- To avoid manual input use a secret.tfvars file saved in the terraform folder and the command: `terraform apply -var-file="secret.tfvars"`.
 
-        The format required for AWS to parse the secrets as key/value pairs is as follows:
-	
+		#### Format Required for AWS to Parse Secrets as Key / Value Pairs
+
     	```
 		database_info = "{ \"host\" : \"some-where-on-internet\", \"port\" : \"8686\", \"database\" : \"dummy\", \"user\" : \"dummy\", \"password\" : \"my-pass" }"
 		```
