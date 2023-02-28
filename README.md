@@ -91,9 +91,9 @@ There are two primary ways of deploying the infrastructure and functionality con
 <br/>
 	- In the repo's root directory, run the following command in your terminal:
 	 	
-    ```
-	make all
-	```
+    	```
+		make all
+		```
 
 	- This instructs the Makefile to run it's 'all' command, which will install all the dev requirements needed in the requirements.txt file. The runtime requirements are handled within the Terraform infrastructure.<br>
 <br/>
@@ -101,9 +101,9 @@ There are two primary ways of deploying the infrastructure and functionality con
 	-  Run `aws sts get-caller-identity` to check you are logged in correctly.
 	- Apply the terraform state bucket creation command as follows (add a suffix to make sure the bucket name is unique):
 
-	```
-	aws s3 mb s3://terraform-state-bucket-totedd-<SUFFIX>
-	```
+		```
+		aws s3 mb s3://terraform-state-bucket-totedd-<SUFFIX>
+		```
 
 	- set the name of the state bucket in the YAML file and Backend.tf file to match the bucket you have just created.
 	- Apply `terraform init -reconfigure` to initialise terraform and use the state file bucket as a backend.
@@ -112,9 +112,9 @@ There are two primary ways of deploying the infrastructure and functionality con
 
         The format required for AWS to parse the secrets as key/value pairs is as follows:
 	
-    ```
-	database_info = "{ \"host\" : \"some-where-on-internet\", \"port\" : \"8686\", \"database\" : \"dummy\", \"user\" : \"dummy\", \"password\" : \"my-pass" }"
-	```
+    	```
+		database_info = "{ \"host\" : \"some-where-on-internet\", \"port\" : \"8686\", \"database\" : \"dummy\", \"user\" : \"dummy\", \"password\" : \"my-pass" }"
+		```
 
 [(Back to top)](#table-of-contents)
 
