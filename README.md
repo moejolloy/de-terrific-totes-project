@@ -64,7 +64,7 @@ There are two primary ways of deploying the infrastructure and functionality con
 	- Create 4 repository secrets: your database credentials as DATABASE_CREDENTIALS, data warehouse credentials as DATA_WAREHOUSE_CREDENTIALS, AWS access key as AWS_ACCESS_KEY and AWS secret key as AWS_SECRET_KEY. Note: as repository owner, only you can change the value of these secrets in future.
 	- The data warehouse and database credentials secrets must be formatted correctly to ensure they are successfully parsed as key/value pairs by AWS Secrets Manager. Format as follows:
 
-	```
+	```json
 	{ "host" : "somewhere-on-internet", "port" : "5432", "database" : "dummy", "user" : "dummy", "password" : "your-password" }
 	```
 
@@ -77,31 +77,31 @@ There are two primary ways of deploying the infrastructure and functionality con
 	- Install Terraform as outlined [here](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli).
 	- In the root directory, set up a virtual environment with:
 
-	```
+	```sh
 	python -m venv venv
 	```
 
 	- Activate the environment using the following command:
 
-		```
+		```sh
 		source venv/bin/activate
 		```
 
-		- Note: this repo will require you to use Python 3.9.16 as instructed in the .python-version file.<br>
-<br/>
+		- Note: this repo will require you to use Python 3.9.16 as instructed in the .python-version file.
+
 	- In the repo's root directory, run the following command in your terminal:
 	 	
-    	```
-		make all
-		```
+	```sh
+	make all
+	```
 
-	- This instructs the Makefile to run it's 'all' command, which will install all the dev requirements needed in the requirements.txt file. The runtime requirements are handled within the Terraform infrastructure.<br>
-<br/>
+	- This instructs the Makefile to run it's 'all' command, which will install all the dev requirements needed in the requirements.txt file. The runtime requirements are handled within the Terraform infrastructure.
+
 	-  Use `aws configure` command, then enter in your AWS login details.
 	-  Run `aws sts get-caller-identity` to check you are logged in correctly.
 	- Apply the terraform state bucket creation command as follows (add a suffix to make sure the bucket name is unique):
 
-		```
+		```sh
 		aws s3 mb s3://terraform-state-bucket-totedd-<SUFFIX>
 		```
 
