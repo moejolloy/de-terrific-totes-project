@@ -6,7 +6,7 @@
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 ![Pandas](https://img.shields.io/badge/pandas-%23150458.svg?style=for-the-badge&logo=pandas&logoColor=white)
 
-![Build Status](https://img.shields.io/github/actions/workflow/status/moejolloy/de-terrific-totes-project/test-and-deploy.yml?event=push&style=for-the-badge)
+![Build Status](https://img.shields.io/github/actions/workflow/status/moejolloy/de-terrific-totes-project/test-and-deploy.yaml?event=push&style=for-the-badge)
 ![Code Size](https://img.shields.io/github/languages/code-size/moejolloy/de-terrific-totes-project?style=for-the-badge)
 ![Contributors](https://img.shields.io/github/contributors/moejolloy/de-terrific-totes-project?style=for-the-badge)
 ![Forks](https://img.shields.io/github/forks/moejolloy/de-terrific-totes-project?style=for-the-badge)
