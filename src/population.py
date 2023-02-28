@@ -31,7 +31,8 @@ def lambda_handler(event, context):
 
     TABLE_LIST = ["dim_staff", "dim_date", "dim_location",
                   "dim_design", "dim_counterparty", "dim_transaction",
-                  "dim_payment_type", "dim_currency"]
+                  "dim_payment_type", "dim_currency", "fact_sales_order",
+                  "fact_purchase_order", "fact_payment"]
 
     results_dict = {}
 
@@ -46,34 +47,6 @@ def lambda_handler(event, context):
         else:
             results_dict[f'{table}'] = True
 
-    results_dict['fact_sales_order'] = False
-    try:
-        df = load_parquet_from_s3(BUCKET, "fact_sales_order.parquet")
-        insert_data_into_db(df, 'fact_sales_order')
-    except Exception as err:
-        logger.error(err)
-    else:
-        results_dict['fact_sales_order'] = True
-
-    results_dict['fact_purchase_order'] = False
-    try:
-        df = load_parquet_from_s3(BUCKET, "fact_purchase_order.parquet")
-        insert_data_into_db(df, 'fact_purchase_order')
-    except Exception as err:
-        logger.error(err)
-    else:
-        results_dict['fact_purchase_order'] = True
-
-    results_dict['fact_payment'] = False
-    try:
-        df = load_parquet_from_s3(BUCKET, "fact_payment.parquet")
-        insert_data_into_db(df, 'fact_payment')
-    except Exception as err:
-        logger.error(err)
-    else:
-        results_dict['fact_payment'] = True
-
-    finally:
         logger.info(results_dict)
         return results_dict
 
@@ -264,17 +237,25 @@ def insert_data_into_db(data_df, table):
 
             # Individual table type modifications.
             TROUBLE_TABLES = {
-                "dim_date": {'date_id': 'datetime64[ns]'},
-                "dim_transaction": {'sales_order_id': 'float64',
-                                    'purchase_order_id': 'float64'},
-                "fact_payment": {'payment_date': 'datetime64[ns]'},
+                "dim_date": {
+                    'date_id': 'datetime64[ns]'
+                    },
+                "dim_transaction": {
+                    'sales_order_id': 'float64',
+                    'purchase_order_id': 'float64'
+                    },
+                "fact_payment": {
+                    'payment_date': 'datetime64[ns]'
+                    },
                 "fact_purchase_order": {
                     'agreed_delivery_date': 'datetime64[ns]',
                     'agreed_payment_date': 'datetime64[ns]'
                     },
-                "fact_sales_order": {'agreed_delivery_date': 'datetime64[ns]',
-                                     'agreed_payment_date': 'datetime64[ns]'},
-            }
+                "fact_sales_order": {
+                    'agreed_delivery_date': 'datetime64[ns]',
+                    'agreed_payment_date': 'datetime64[ns]'
+                    },
+                }
 
             if table in list(TROUBLE_TABLES.keys()):
                 if table == 'dim_transaction':
