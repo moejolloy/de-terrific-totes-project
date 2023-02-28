@@ -6,7 +6,7 @@
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 ![Pandas](https://img.shields.io/badge/pandas-%23150458.svg?style=for-the-badge&logo=pandas&logoColor=white)
 
-![Build Status](https://img.shields.io/github/actions/workflow/status/moejolloy/de-terrific-totes-project/test-and-deploy.yml?event=push&style=for-the-badge)
+![Build Status](https://img.shields.io/github/actions/workflow/status/moejolloy/de-terrific-totes-project/test-and-deploy.yaml?event=push&style=for-the-badge)
 ![Code Size](https://img.shields.io/github/languages/code-size/moejolloy/de-terrific-totes-project?style=for-the-badge)
 ![Contributors](https://img.shields.io/github/contributors/moejolloy/de-terrific-totes-project?style=for-the-badge)
 ![Forks](https://img.shields.io/github/forks/moejolloy/de-terrific-totes-project?style=for-the-badge)
@@ -80,13 +80,7 @@ There are two primary ways of deploying the infrastructure and functionality con
      #### Database and Data Warehouse Credentials Formatting:
 
      ```json
-     {
-       "host": "somewhere-on-internet",
-       "port": "5432",
-       "database": "dummy",
-       "user": "dummy",
-       "password": "your-password"
-     }
+     {"host": "somewhere-on-internet", "port": "5432", "database": "dummy", "user": "dummy", "password": "your-password"}
      ```
 
    - Change the name of the bucket for storing the Terraform state file in **backend.tf** and **test-and-deploy.yml** files. This will ensure a unique bucket is created.
@@ -280,7 +274,7 @@ This repository contains two YAML files to build our CI/CD pipeline:
 - Two processes are run asynchronously:
   - Running Makefile commands for validation:
     - unit-tests
-    - compliance checks for security, Flake8 formatting, and coverage
+    - compliance checks for security, PEP 8 formatting, and coverage
   - Running Terraform Validate for **.tf** file syntax checks.
 
 #### Test and Deploy
