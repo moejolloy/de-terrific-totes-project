@@ -1,11 +1,12 @@
 from src.population import (lambda_handler,
                             get_warehouse_connection,
-                            insert_data_into_db_old)
+                            insert_data_into_db)
 from unittest.mock import patch
 import pandas as pd
 import logging
 import psycopg2
 import datetime
+import pytest
 
 
 test_datetime = datetime.datetime.fromisoformat("2000-01-01T14:20:51.563000")
@@ -38,52 +39,100 @@ def test_get_warehouse_connection_operational_error_logging(mock_conn, caplog):
     assert caplog.records[0].msg == 'Invalid Credentials.'
 
 
+@patch('src.population.psycopg2.connect')
 @patch('src.population.psycopg2.extras')
-@patch('src.population.get_warehouse_connection')
 @patch('src.population.get_secret_value')
-def test_insert_data_into_db_old(mock_gsv, mock_gwc, mock_extras, caplog):
+def test_insert_data_into_db(mock_gsv, mock_extras, mock_connect, caplog):
+    staff_data = {
+        "staff_id": [1, 2, 3],
+        "first_name": ["Sam", "Joe", "Max"],
+        "last_name": ["Ant", "Boo", "Car"],
+        "department_id": [1, 2, 3],
+        "location": ['Loc1', 'Loc2', 'Loc3'],
+        "email_address": ["a@b.com", "b@c.com", "c@d.com"],
+    }
+    df = pd.DataFrame(data=staff_data)
     mock_gsv.return_value = {'user': 'name'}
-    insert_data_into_db_old([[]], 'table1')
+    mock_connect.return_value.cursor.return_value.fetchall.return_value \
+        = df.values.tolist()
+    mock_connect.return_value.cursor.return_value.description = [
+        ['staff_id'],
+        ['first_name'],
+        ['last_name'],
+        ['department_id'],
+        ['location'],
+        ['email_address']]
+    insert_data_into_db(df, 'dim_staff')
     assert caplog.records[0].levelno == logging.INFO
-    assert caplog.records[0].msg == 'Clearing data from table: table1'
+    assert caplog.records[0].msg == 'New rows to insert: 0'
     assert caplog.records[1].levelno == logging.INFO
-    assert caplog.records[1].msg == 'Inserting data into table: table1'
-    assert caplog.records[2].levelno == logging.INFO
-    assert caplog.records[2].msg == 'Changes commited to table: table1'
-    assert caplog.records[3].levelno == logging.INFO
-    assert caplog.records[3].msg == 'Connection closed successfully'
-
-
-@patch('src.population.get_secret_value')
-def test_insert_data_into_db_old_credentials_error(mock_gsv, caplog):
-    mock_gsv.side_effect = Exception('Error retrieving credentials')
-    insert_data_into_db_old([[]], 'table1')
-    assert caplog.records[0].levelno == logging.ERROR
-    assert caplog.records[0].msg.args[0] == 'Error retrieving credentials'
-
-
-@patch('src.population.get_warehouse_connection')
-@patch('src.population.get_secret_value')
-def test_insert_data_into_db_old_connection_error(mock_gsv, mock_gwc, caplog):
-    mock_gsv.return_value = {'user': 'name'}
-    mock_gwc.side_effect = Exception('Connection error')
-    insert_data_into_db_old([[]], 'table1')
-    assert caplog.records[0].levelno == logging.ERROR
-    assert caplog.records[0].msg.args[0] == 'Connection error'
-
-
-@patch('src.population.psycopg2.extras')
-@patch('src.population.get_warehouse_connection')
-@patch('src.population.get_secret_value')
-def test_insert_data_into_db_old_query_error(
-        mock_gsv, mock_gwc, mock_extras, caplog):
-    mock_gsv.return_value = {'user': 'name'}
-    mock_extras.execute_values.side_effect = Exception('Error inserting data')
-    insert_data_into_db_old([[]], 'table1')
-    assert caplog.records[1].levelno == logging.ERROR
-    assert caplog.records[1].msg.args[0] == 'Error inserting data'
+    assert caplog.records[1].msg == 'Existing rows to update: 0'
     assert caplog.records[2].levelno == logging.INFO
     assert caplog.records[2].msg == 'Connection closed successfully'
+
+
+@patch('src.population.get_secret_value')
+def test_insert_data_into_db_credentials_error(mock_gsv, caplog):
+    mock_gsv.side_effect = Exception('Error retrieving credentials')
+    df = pd.DataFrame([[1, 2], [3, 4]])
+    with pytest.raises(Exception):
+        insert_data_into_db(df, 'table1')
+        assert caplog.records[0].levelno == logging.ERROR
+        assert caplog.records[0].msg.args[0] == 'Error retrieving credentials'
+
+
+@patch('src.population.get_warehouse_connection')
+@patch('src.population.get_secret_value')
+def test_insert_data_into_db_connection_error(mock_gsv, mock_gwc, caplog):
+    mock_gsv.return_value = {'user': 'name'}
+    mock_gwc.side_effect = Exception('Connection error')
+    df = pd.DataFrame([[1, 2], [3, 4]])
+    with pytest.raises(Exception):
+        insert_data_into_db(df, 'table1')
+        assert caplog.records[0].levelno == logging.ERROR
+        assert caplog.records[0].msg.args[0] == 'Connection error'
+
+
+@patch('src.population.psycopg2.connect')
+@patch('src.population.psycopg2.extras')
+@patch('src.population.get_secret_value')
+def test_insert_data_into_db_query_error(
+        mock_gsv, mock_extras, mock_connect, caplog):
+    staff_data_db = {
+        "staff_id": [1, 2, 3, 4],
+        "first_name": ["Sam", "Joe", "Max", "Bob"],
+        "last_name": ["Ant", "Boo", "Car", "Dee"],
+        "department_id": [1, 2, 3, 4],
+        "location": ['Loc1', 'Loc2', 'Loc3', 'Loc4'],
+        "email_address": ["a@b.com", "b@c.com", "c@d.com", 'd@e.com'],
+    }
+    staff_data_dw = {
+        "staff_id": [1, 2, 3],
+        "first_name": ["Sam", "Joe", "Max"],
+        "last_name": ["Ant", "Boo", "Car"],
+        "department_id": [1, 2, 3],
+        "location": ['Loc1', 'Loc2', 'Loc3'],
+        "email_address": ["a@b.com", "b@c.com", "c@d.com"],
+    }
+    db_df = pd.DataFrame(data=staff_data_db)
+    dw_df = pd.DataFrame(data=staff_data_dw)
+    mock_connect.return_value.cursor.return_value.fetchall.return_value \
+        = dw_df.values.tolist()
+    mock_connect.return_value.cursor.return_value.description = [
+        ['staff_id'],
+        ['first_name'],
+        ['last_name'],
+        ['department_id'],
+        ['location'],
+        ['email_address']]
+    mock_gsv.return_value = {'user': 'name'}
+    mock_extras.execute_values.side_effect = Exception('Error inserting data')
+    with pytest.raises(Exception):
+        insert_data_into_db(db_df, 'table1')
+        assert caplog.records[1].levelno == logging.ERROR
+        assert caplog.records[1].msg.args[0] == 'Error inserting data'
+        assert caplog.records[2].levelno == logging.INFO
+        assert caplog.records[2].msg == 'Connection closed successfully'
 
 
 @patch('src.population.load_parquet_from_s3')
@@ -101,6 +150,46 @@ def test_lambda_handler_returns_a_dictionary(mock_insert, mock_load):
                    "fact_sales_order": True,
                    "fact_purchase_order": True,
                    "fact_payment": True}
+    assert lambda_handler({}, {}) == test_result
+
+
+@patch('src.population.load_parquet_from_s3')
+def test_lambda_handler_error(mock_load, caplog):
+    mock_load.side_effect = Exception('Error loading file')
+    lambda_handler({}, {})
+    test_result = {"dim_staff": False,
+                   "dim_date": False,
+                   "dim_location": False,
+                   "dim_design": False,
+                   "dim_counterparty": False,
+                   "dim_transaction": False,
+                   "dim_payment_type": False,
+                   "dim_currency": False,
+                   "fact_sales_order": False,
+                   "fact_purchase_order": False,
+                   "fact_payment": False}
+    assert caplog.records[0].levelno == logging.ERROR
+    assert caplog.records[0].msg.args[0] == 'Error loading file'
+    assert caplog.records[1].levelno == logging.ERROR
+    assert caplog.records[1].msg.args[0] == 'Error loading file'
+    assert caplog.records[2].levelno == logging.ERROR
+    assert caplog.records[2].msg.args[0] == 'Error loading file'
+    assert caplog.records[3].levelno == logging.ERROR
+    assert caplog.records[3].msg.args[0] == 'Error loading file'
+    assert caplog.records[4].levelno == logging.ERROR
+    assert caplog.records[4].msg.args[0] == 'Error loading file'
+    assert caplog.records[5].levelno == logging.ERROR
+    assert caplog.records[5].msg.args[0] == 'Error loading file'
+    assert caplog.records[6].levelno == logging.ERROR
+    assert caplog.records[6].msg.args[0] == 'Error loading file'
+    assert caplog.records[7].levelno == logging.ERROR
+    assert caplog.records[7].msg.args[0] == 'Error loading file'
+    assert caplog.records[8].levelno == logging.ERROR
+    assert caplog.records[8].msg.args[0] == 'Error loading file'
+    assert caplog.records[9].levelno == logging.ERROR
+    assert caplog.records[9].msg.args[0] == 'Error loading file'
+    assert caplog.records[10].levelno == logging.ERROR
+    assert caplog.records[10].msg.args[0] == 'Error loading file'
     assert lambda_handler({}, {}) == test_result
 
 
@@ -242,43 +331,3 @@ def load_df(bucket, key, parse_dates=[]):
             "counterparty_ac_number": [1, 2, 3]
         }
         return pd.DataFrame(data=payment_data)
-
-
-@patch('src.population.load_parquet_from_s3')
-def test_lambda_handler_error(mock_load, caplog):
-    mock_load.side_effect = Exception('Error loading file')
-    lambda_handler({}, {})
-    test_result = {"dim_staff": False,
-                   "dim_date": False,
-                   "dim_location": False,
-                   "dim_design": False,
-                   "dim_counterparty": False,
-                   "dim_transaction": False,
-                   "dim_payment_type": False,
-                   "dim_currency": False,
-                   "fact_sales_order": False,
-                   "fact_purchase_order": False,
-                   "fact_payment": False}
-    assert caplog.records[0].levelno == logging.ERROR
-    assert caplog.records[0].msg.args[0] == 'Error loading file'
-    assert caplog.records[1].levelno == logging.ERROR
-    assert caplog.records[1].msg.args[0] == 'Error loading file'
-    assert caplog.records[2].levelno == logging.ERROR
-    assert caplog.records[2].msg.args[0] == 'Error loading file'
-    assert caplog.records[3].levelno == logging.ERROR
-    assert caplog.records[3].msg.args[0] == 'Error loading file'
-    assert caplog.records[4].levelno == logging.ERROR
-    assert caplog.records[4].msg.args[0] == 'Error loading file'
-    assert caplog.records[5].levelno == logging.ERROR
-    assert caplog.records[5].msg.args[0] == 'Error loading file'
-    assert caplog.records[6].levelno == logging.ERROR
-    assert caplog.records[6].msg.args[0] == 'Error loading file'
-    assert caplog.records[7].levelno == logging.ERROR
-    assert caplog.records[7].msg.args[0] == 'Error loading file'
-    assert caplog.records[8].levelno == logging.ERROR
-    assert caplog.records[8].msg.args[0] == 'Error loading file'
-    assert caplog.records[9].levelno == logging.ERROR
-    assert caplog.records[9].msg.args[0] == 'Error loading file'
-    assert caplog.records[10].levelno == logging.ERROR
-    assert caplog.records[10].msg.args[0] == 'Error loading file'
-    assert lambda_handler({}, {}) == test_result
