@@ -80,13 +80,7 @@ There are two primary ways of deploying the infrastructure and functionality con
      #### Database and Data Warehouse Credentials Formatting:
 
      ```json
-     {
-       "host": "somewhere-on-internet",
-       "port": "5432",
-       "database": "dummy",
-       "user": "dummy",
-       "password": "your-password"
-     }
+     {"host": "somewhere-on-internet", "port": "5432", "database": "dummy", "user": "dummy", "password": "your-password"}
      ```
 
    - Change the name of the bucket for storing the Terraform state file in **backend.tf** and **test-and-deploy.yml** files. This will ensure a unique bucket is created.
