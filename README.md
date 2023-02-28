@@ -18,7 +18,7 @@
 |:----------|
 |[Project Summary](#project-summary)|
 |[Directions for Deployment](#directions-for-deployment)|
-|[How it Works]()|
+|[How it Works](#how-it-works)|
 
 ---
 
@@ -63,7 +63,7 @@ There are two primary ways of deploying the infrastructure and functionality con
 	- From the Actions and Secrets page, click New Repository Secret.
 	- Create 4 repository secrets:
 
-		|Secret|
+		|Secret Name|
 		|:------|
 		|DATABASE_CREDENTIALS|
 		|DATA_WAREHOUSE_CREDENTIALS|
@@ -141,41 +141,50 @@ There are two primary ways of deploying the infrastructure and functionality con
 
 ## How it Works
 
-1. [Python functions and tests]()
+1. [Python Functions and Tests](#1-python-functions-and-tests)
 2. [Terraform](#2-terraform)
 3. [Makefile](#3-makefile)
 4. [YAML](#4-yaml)
 
 ---
 
+### 1. Python Functions and Tests
+
+---
+
 ### 2. Terraform
 
-The Terraform folder contains a collection of files and directories that are organized in a way that makes the code readable and easy to understand. Each directory and file serves a specific purpose, which 
+The Terraform folder contains a collection of files and directories that are organized in a way that makes the code readable and easy to understand. Each directory and file serves a specific purpose, which we'll explore in more detail below.
 
-we'll explore in more detail below.
 #### **.terraform directory**
 
 - The .terraform directory typically holds the state file, which is used to keep track of the current state of the infrastructure. 
-- However, in this project, we've hosted the state file in an S3 bucket 
-on AWS, as required by the project.
+- However, in this project the state file is hosted in a S3 bucket 
+on AWS for shared access.
 
 #### **lambda-dependencies directory**
 
-- The lambda-dependencies directory contains the necessary dependencies for each of the three lambda functions: the ingestion, processing, and population lambdas. 
+- The lambda-dependencies directory contains the necessary dependencies for each of the three lambda functions: 
+	- Ingestion
+	- Processing
+	- Population
 - These dependencies are then zipped and stored in their respective 
 folders in the zips directory.
 
 #### **zips directory**
 
-- The zips directory contains three sub-directories, each of which contains the zipped versions of the dependencies.txt files for the respective lambda functions.
+- The zips directory contains three sub-directories, each of which contains the zipped versions of the **dependencies.txt** files for the respective lambda functions.
 
 #### **.terraform.lock.hcl**
 
-- **Not really sure what this does**
+- Terraform can deal with external dependencies that come from outside of its own codebase which can be published and updated independently from Terraform.
+- For that reason, Terraform must determine which versions of those dependencies are potentially compatible with the current configuration.
+- Terraform remembers the decisions it made in a dependency lock file so that it can (by default) make the same decisions again in future.
+- Terraform automatically creates or updates the dependency lock file each time the `terraform init` command is run.
 
 #### **alarm.tf**
 
-- The alarm.tf file contains the necessary elements of AWS alarms including:
+- The **alarm.tf** file contains the necessary elements of AWS alarms including:
 	- Cloudwatch log metric filters
 	- Cloudwatch metric alarms
 	- SNS topics and subscriptions
@@ -193,15 +202,15 @@ required_version  =  "~> 1.3.7"
 
 #### **cloudwatch-iam.tf**
 
-- The cloudwatch-iam.tf file contains the neccessary aws iam policies, policy documents and policy attachments for cloudwatch.
+- The **cloudwatch-iam.tf** file contains the neccessary aws iam policies, policy documents and policy attachments for cloudwatch.
 
 #### **data.tf**
 
-- The data.tf file copies the text file dependencies from the lambda-dependencies directory into their respective zips directory. Then these text files are zipped and the dependencies are installed to the lambda functions.
+- The **data.tf** file copies the text file dependencies from the lambda-dependencies directory into their respective zips directory. Then these text files are zipped and the dependencies are installed to the lambda functions.
 
 #### **iam.tf**
 
-- The iam.tf file contains the neccessary aws iam policies, policy documents, policy attachments for the lambda functions. These include read/write access to the necessary buckets.
+- The **iam.tf** file contains the neccessary aws iam policies, policy documents, policy attachments for the lambda functions. These include read/write access to the necessary buckets.
 
 #### **lambda.tf**
 
@@ -255,9 +264,9 @@ This repository contains two YAML files to build our CI/CD pipeline:
 
 - Runs on push to main or triggered manually on Github's actions page (Can only be run from the **main** branch).
 - First runs the same testing code from Makefile for a final validation check.
-- Once all the validation passes it runs the processes required to seamlessly deploy our code infrastructure:
-	- Connects to AWS using credentials from to the Github repository secrets page.
-	- Creates a terraform state file on S3.
+- Once all the validation passes it runs the processes required to seamlessly deploy the code infrastructure:
+	- Connects to AWS using credentials from the Github repository secrets page.
+	- Creates a terraform **.tfstate** file on S3.
 	- Initialises terraform and runs `terraform apply` using the database and warehouse credentials from the Github repository secrets page.
 
 [(Back to top)](#table-of-contents)
