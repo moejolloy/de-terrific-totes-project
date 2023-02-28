@@ -16,7 +16,7 @@
 ## Table of Contents
 |Contents|
 |----------|
-|[`Project Summary`](#project-summary)|
+|[Project Summary](#project-summary)|
 |[Directions for Deployment](#directions-for-deployment)|
 |[How it Works]()|
 
@@ -64,7 +64,9 @@ There are two primary ways of deploying the infrastructure and functionality con
 	- Create 4 repository secrets: your database credentials as DATABASE_CREDENTIALS, data warehouse credentials as DATA_WAREHOUSE_CREDENTIALS, AWS access key as AWS_ACCESS_KEY and AWS secret key as AWS_SECRET_KEY. Note: as repository owner, only you can change the value of these secrets in future.
 	- The data warehouse and database credentials secrets must be formatted correctly to ensure they are successfully parsed as key/value pairs by AWS Secrets Manager. Format as follows:
 
-	    ```{ "host" : "somewhere-on-internet", "port" : "5432", "database" : "dummy", "user" : "dummy", "password" : "your-password" }```
+	```
+	{ "host" : "somewhere-on-internet", "port" : "5432", "database" : "dummy", "user" : "dummy", "password" : "your-password" }
+	```
 
 	- Change the name of the bucket for storing the Terraform state file in backend.tf and in the YAML file. This will ensure a unique bucket is created.
 	- On your forked repo page, click on the Actions menu, then on the Final Test and Deploy workflow. Next to the notice that this repo has a workflow dispatch, click on Run Workflow, from main branch and in dev environment.
@@ -75,17 +77,23 @@ There are two primary ways of deploying the infrastructure and functionality con
 	- Install Terraform as outlined [here](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli).
 	- In the root directory, set up a virtual environment with:
 
-		```python -m venv venv```
+	```
+	python -m venv venv
+	```
 
 	- Activate the environment using the following command:
 
-		```source venv/bin/activate```
+		```
+		source venv/bin/activate
+		```
 
 		- Note: this repo will require you to use Python 3.9.16 as instructed in the .python-version file.<br>
 <br/>
 	- In the repo's root directory, run the following command in your terminal:
 	 	
-        ```make all```
+    ```
+	make all
+	```
 
 	- This instructs the Makefile to run it's 'all' command, which will install all the dev requirements needed in the requirements.txt file. The runtime requirements are handled within the Terraform infrastructure.<br>
 <br/>
@@ -93,7 +101,9 @@ There are two primary ways of deploying the infrastructure and functionality con
 	-  Run `aws sts get-caller-identity` to check you are logged in correctly.
 	- Apply the terraform state bucket creation command as follows (add a suffix to make sure the bucket name is unique):
 
-	```aws s3 mb s3://terraform-state-bucket-totedd-<SUFFIX>```
+	```
+	aws s3 mb s3://terraform-state-bucket-totedd-<SUFFIX>
+	```
 
 	- set the name of the state bucket in the YAML file and Backend.tf file to match the bucket you have just created.
 	- Apply `terraform init -reconfigure` to initialise terraform and use the state file bucket as a backend.
@@ -102,7 +112,9 @@ There are two primary ways of deploying the infrastructure and functionality con
 
         The format required for AWS to parse the secrets as key/value pairs is as follows:
 	
-    ```database_info = "{ \"host\" : \"some-where-on-internet\", \"port\" : \"8686\", \"database\" : \"dummy\", \"user\" : \"dummy\", \"password\" : \"my-pass" }"```
+    ```
+	database_info = "{ \"host\" : \"some-where-on-internet\", \"port\" : \"8686\", \"database\" : \"dummy\", \"user\" : \"dummy\", \"password\" : \"my-pass" }"
+	```
 
 [(Back to top)](#table-of-contents)
 
