@@ -8,7 +8,7 @@
 # Crash log files
 crash.log
 
-
+# pycache
 */__pycache__/
 
 # venv
@@ -23,5 +23,6 @@ terraform/zips/processing_files/*
 terraform/zips/population_files/*
 terraform/zips/*.zip
 
+# Other files
 .DS_Store
 .coverage

@@ -58,7 +58,6 @@ data "aws_iam_policy_document" "population_lambda_cloudwatch_policy_document" {
   }
 }
 
-
 resource "aws_iam_policy" "ingestion_lambda_cloudwatch_policy" {
   name_prefix = "cw-policy-${var.ingestion_lambda_name}"
   policy      = data.aws_iam_policy_document.ingestion_lambda_cloudwatch_policy_document.json

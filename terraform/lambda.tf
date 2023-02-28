@@ -8,6 +8,11 @@ resource "aws_lambda_function" "ingestion_lambda" {
   timeout          = 60
   layers           = ["arn:aws:lambda:us-east-1:336392948345:layer:AWSSDKPandas-Python39:3"]
 
+  environment {
+    variables = {
+      TF_ING_BUCKET = aws_s3_bucket.ingest-bucket.bucket
+    }
+  }
 }
 
 resource "aws_lambda_permission" "allow_eventbridge_ingestion_lambda" {
@@ -38,8 +43,14 @@ resource "aws_lambda_function" "processing_lambda" {
   handler          = "transformation.transform_data"
   runtime          = "python3.9"
   layers           = ["arn:aws:lambda:us-east-1:336392948345:layer:AWSSDKPandas-Python39:3"]
-}
 
+  environment {
+    variables = {
+      TF_ING_BUCKET = aws_s3_bucket.ingest-bucket.bucket
+      TF_PRO_BUCKET = aws_s3_bucket.processed-bucket.bucket
+    }
+  }
+}
 
 resource "aws_lambda_function" "population_lambda" {
   filename         = data.archive_file.population_lambda_zipper.output_path
@@ -51,4 +62,9 @@ resource "aws_lambda_function" "population_lambda" {
   timeout          = 60
   layers           = ["arn:aws:lambda:us-east-1:336392948345:layer:AWSSDKPandas-Python39:3"]
 
+  environment {
+    variables = {
+      TF_PRO_BUCKET = aws_s3_bucket.processed-bucket.bucket
+    }
+  }
 }
