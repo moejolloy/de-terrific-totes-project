@@ -274,7 +274,7 @@ This repository contains two YAML files to build our CI/CD pipeline:
 - Two processes are run asynchronously:
   - Running Makefile commands for validation:
     - unit-tests
-    - compliance checks for security, Flake8 formatting, and coverage
+    - compliance checks for security, PEP 8 formatting, and coverage
   - Running Terraform Validate for **.tf** file syntax checks.
 
 #### Test and Deploy
