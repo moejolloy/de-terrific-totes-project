@@ -237,6 +237,7 @@ def format_fact_sales_order(sales_order_df):
         "last_updated"].dt.date
     sales_order_df["last_updated_time"] = sales_order_df[
         "last_updated"].dt.time
+    sales_order_df["sales_staff_id"] = sales_order_df["staff_id"]
 
     fact_sales_order = sales_order_df[[
         "sales_record_id",
@@ -245,14 +246,14 @@ def format_fact_sales_order(sales_order_df):
         "created_time",
         "last_updated_date",
         "last_updated_time",
-        "staff_id",
+        "sales_staff_id",
         "counterparty_id",
         "units_sold",
         "unit_price",
         "currency_id",
         "design_id",
-        "agreed_delivery_date",
         "agreed_payment_date",
+        "agreed_delivery_date",
         "agreed_delivery_location_id"
     ]]
     return fact_sales_order

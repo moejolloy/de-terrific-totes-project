@@ -1,6 +1,6 @@
 from src.population import (lambda_handler,
                             get_warehouse_connection,
-                            insert_data_into_db)
+                            insert_data_into_db_old)
 from unittest.mock import patch
 import pandas as pd
 import logging
@@ -41,9 +41,9 @@ def test_get_warehouse_connection_operational_error_logging(mock_conn, caplog):
 @patch('src.population.psycopg2.extras')
 @patch('src.population.get_warehouse_connection')
 @patch('src.population.get_secret_value')
-def test_insert_data_into_db(mock_gsv, mock_gwc, mock_extras, caplog):
+def test_insert_data_into_db_old(mock_gsv, mock_gwc, mock_extras, caplog):
     mock_gsv.return_value = {'user': 'name'}
-    insert_data_into_db([[]], 'table1')
+    insert_data_into_db_old([[]], 'table1')
     assert caplog.records[0].levelno == logging.INFO
     assert caplog.records[0].msg == 'Clearing data from table: table1'
     assert caplog.records[1].levelno == logging.INFO
@@ -55,19 +55,19 @@ def test_insert_data_into_db(mock_gsv, mock_gwc, mock_extras, caplog):
 
 
 @patch('src.population.get_secret_value')
-def test_insert_data_into_db_credentials_error(mock_gsv, caplog):
+def test_insert_data_into_db_old_credentials_error(mock_gsv, caplog):
     mock_gsv.side_effect = Exception('Error retrieving credentials')
-    insert_data_into_db([[]], 'table1')
+    insert_data_into_db_old([[]], 'table1')
     assert caplog.records[0].levelno == logging.ERROR
     assert caplog.records[0].msg.args[0] == 'Error retrieving credentials'
 
 
 @patch('src.population.get_warehouse_connection')
 @patch('src.population.get_secret_value')
-def test_insert_data_into_db_connection_error(mock_gsv, mock_gwc, caplog):
+def test_insert_data_into_db_old_connection_error(mock_gsv, mock_gwc, caplog):
     mock_gsv.return_value = {'user': 'name'}
     mock_gwc.side_effect = Exception('Connection error')
-    insert_data_into_db([[]], 'table1')
+    insert_data_into_db_old([[]], 'table1')
     assert caplog.records[0].levelno == logging.ERROR
     assert caplog.records[0].msg.args[0] == 'Connection error'
 
@@ -75,11 +75,11 @@ def test_insert_data_into_db_connection_error(mock_gsv, mock_gwc, caplog):
 @patch('src.population.psycopg2.extras')
 @patch('src.population.get_warehouse_connection')
 @patch('src.population.get_secret_value')
-def test_insert_data_into_db_query_error(
+def test_insert_data_into_db_old_query_error(
         mock_gsv, mock_gwc, mock_extras, caplog):
     mock_gsv.return_value = {'user': 'name'}
     mock_extras.execute_values.side_effect = Exception('Error inserting data')
-    insert_data_into_db([[]], 'table1')
+    insert_data_into_db_old([[]], 'table1')
     assert caplog.records[1].levelno == logging.ERROR
     assert caplog.records[1].msg.args[0] == 'Error inserting data'
     assert caplog.records[2].levelno == logging.INFO

@@ -263,8 +263,8 @@ def test_format_fact_sales_order_returns_expected_output():
         "units_sold": [100, 200, 300],
         "unit_price": [2.45, 3.67, 9.87],
         "currency_id": [1, 2, 3],
-        "agreed_delivery_date": [test_date, test_date, test_date],
         "agreed_payment_date": [test_date, test_date, test_date],
+        "agreed_delivery_date": [test_date, test_date, test_date],
         "agreed_delivery_location_id": [1, 2, 3]
     }
     sales_order_df = pd.DataFrame(data=sales_order_data)
@@ -275,14 +275,14 @@ def test_format_fact_sales_order_returns_expected_output():
         "created_time": [test_time, test_time, test_time],
         "last_updated_date": [test_date, test_date, test_date],
         "last_updated_time": [test_time, test_time, test_time],
-        "staff_id": [1, 2, 3],
+        "sales_staff_id": [1, 2, 3],
         "counterparty_id": [1, 2, 3],
         "units_sold": [100, 200, 300],
         "unit_price": [2.45, 3.67, 9.87],
         "currency_id": [1, 2, 3],
         "design_id": ["des1", "des2", "des3"],
-        "agreed_delivery_date": [test_date, test_date, test_date],
         "agreed_payment_date": [test_date, test_date, test_date],
+        "agreed_delivery_date": [test_date, test_date, test_date],
         "agreed_delivery_location_id": [1, 2, 3]
     }
     fact_sales_order_df = pd.DataFrame(data=test_fact_sales_order_data)
