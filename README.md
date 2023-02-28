@@ -25,7 +25,7 @@
 
 ## Project Summary
 
-A data platform that extracts data from an operational database, archives it in a data lake, and makes it availabale in a remodelled OLAP data warehouse.
+A data platform that extracts data from an operational database, archives it in a data lake, and makes it available in a remodelled OLAP data warehouse.
 
 ---
 
