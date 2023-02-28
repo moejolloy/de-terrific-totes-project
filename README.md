@@ -29,7 +29,7 @@ A data platform that extracts data from an operational database, archives it in 
 
 ---
 
-The primary data source for the project is a database called **totesys** which is meant to simulate the back end data of a commercial application. The company **TerrificTotes** makes branded and customised tote bags for retail and corporate clients.
+The primary data source for the project is a database called **totesys** which is meant to simulate the back end data of a commercial application. The company **Terrific Totes** makes branded and customised tote bags for retail and corporate clients.
 Fake data from the sales and purchasing teams is inserted and updated into this database several times a day.
 
 The full ERD for the database is detailed [here](https://dbdiagram.io/d/6332fecf7b3d2034ffcaaa92).
