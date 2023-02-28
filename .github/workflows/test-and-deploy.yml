@@ -64,10 +64,10 @@ jobs:
           aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY }}
           aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_KEY }}
           aws configure set region us-east-1
-      - name: create bucket
-        run: aws s3 mb s3://terrific-totes-terraform-bucket
-      - name: wait for bucket to be created
-        run: sleep 30s
+      # - name: create bucket
+      #   run: aws s3 mb s3://terrific-totes-terraform-bucket
+      # - name: wait for bucket to be created
+      #   run: sleep 30s
 
   deploy-terraform-code:
     name: deploy terraform code
@@ -90,7 +90,7 @@ jobs:
         uses: hashicorp/setup-terraform@v2
       - name: Terraform Init
         id: init
-        run: cd ./terraform && terraform init -reconfigure
+        run: cd ./terraform && terraform init -migrate-state -force-copy
       - name: Terraform Validate
         id: validate
         run: cd ./terraform && terraform validate -no-color
