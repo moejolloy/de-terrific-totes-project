@@ -83,7 +83,7 @@ resource "aws_iam_policy" "read-only-access-processed-bucket-policy" {
 }
 
 resource "aws_iam_role" "ingest-lambda-role" {
-  name               = "ingest-lambda-role"
+  name               = "ingest-lambda-role-revised"
   assume_role_policy = <<EOF
     {
         "Version": "2012-10-17",
@@ -105,7 +105,7 @@ resource "aws_iam_role" "ingest-lambda-role" {
 }
 
 resource "aws_iam_role" "processed-lambda-role" {
-  name               = "processed-lambda-role"
+  name               = "processed-lambda-role-revised"
   assume_role_policy = <<EOF
     {
         "Version": "2012-10-17",
@@ -127,7 +127,7 @@ resource "aws_iam_role" "processed-lambda-role" {
 }
 
 resource "aws_iam_role" "populate-lambda-role" {
-  name               = "populate-lambda-role"
+  name               = "populate-lambda-role-revised"
   assume_role_policy = <<EOF
     {
         "Version": "2012-10-17",
