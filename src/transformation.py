@@ -2,6 +2,7 @@ import boto3
 import pandas as pd
 import logging
 from io import BytesIO
+import os
 
 logger = logging.getLogger("processing")
 logger.setLevel(logging.INFO)
@@ -23,30 +24,29 @@ def transform_data(event, context):
         a dictionary with keys of the files to be uploaded
         values True if file successfully processed, else None.
     """
-    bucket = "terrific-totes-ingest-bucket-500"
-    processed_bucket = "terrific-totes-processed-bucket-500"
+    INGEST_BUCKET = os.environ.get('TF_ING_BUCKET')
+    PROCESSED_BUCKET = os.environ.get('TF_PRO_BUCKET')
 
     files_list = ["staff.csv", "department.csv", "address.csv",
                   "design.csv", "counterparty.csv", "transaction.csv",
                   "payment_type.csv", "currency.csv"]
     try:
         df_list = [load_csv_from_s3(
-            bucket, file, parse_dates=["created_at", "last_updated"])
+            INGEST_BUCKET, file, parse_dates=["created_at", "last_updated"])
             for file in files_list]
-        sales_order_df = load_csv_from_s3(
-            bucket, "sales_order.csv", parse_dates=["created_at",
-                                                    "last_updated",
-                                                    "agreed_delivery_date",
-                                                    "agreed_payment_date"])
-        purchase_order_df = load_csv_from_s3(
-            bucket, "purchase_order.csv", parse_dates=["created_at",
+        sales_order_df = load_csv_from_s3(INGEST_BUCKET, "sales_order.csv",
+                                          parse_dates=["created_at",
                                                        "last_updated",
                                                        "agreed_delivery_date",
                                                        "agreed_payment_date"])
+        purchase_order_df = load_csv_from_s3(
+            INGEST_BUCKET, "purchase_order.csv",
+            parse_dates=["created_at", "last_updated",
+                         "agreed_delivery_date", "agreed_payment_date"])
         payment_df = load_csv_from_s3(
-            bucket, "payment.csv", parse_dates=["created_at",
-                                                "last_updated",
-                                                "payment_date"])
+            INGEST_BUCKET, "payment.csv", parse_dates=["created_at",
+                                                       "last_updated",
+                                                       "payment_date"])
         (staff_df, dept_df, address_df, design_df, counterparty_df,
          transaction_df, payment_type_df, currency_df) = df_list
     except Exception as error:
@@ -77,7 +77,7 @@ def transform_data(event, context):
 
     try:
         upload_results = {item: export_parquet_to_s3(
-            files_dict[item], processed_bucket, item) for item in files_dict}
+            files_dict[item], PROCESSED_BUCKET, item) for item in files_dict}
         logger.info('SUCCESSFULLY PROCESSED')
         return upload_results
     except Exception as error:

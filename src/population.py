@@ -7,6 +7,7 @@ from io import BytesIO
 import psycopg2
 import psycopg2.extras
 import numpy as np
+import os
 
 
 logger = logging.getLogger("population")
@@ -26,7 +27,7 @@ def lambda_handler(event, context):
         signifiying if the data was sucsessfully inserted into the
         Data Warehouse or not.
     """
-    BUCKET = 'terrific-totes-processed-bucket-500'
+    BUCKET = os.environ.get('TF_PRO_BUCKET')
 
     TABLE_LIST = ["dim_staff", "dim_date", "dim_location",
                   "dim_design", "dim_counterparty", "dim_transaction",

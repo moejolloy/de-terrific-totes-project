@@ -2,7 +2,6 @@ data "aws_caller_identity" "current" {}
 
 data "aws_region" "current" {}
 
-
 data "archive_file" "ingestion_lambda_zipper" {
   type        = "zip"
   source_dir  = "${path.module}/zips/ingestion-files"
