@@ -1,4 +1,10 @@
-"""Uploads database table data to separate '.csv' files on S3."""
+"""Uploads database table data to separate '.csv' files on S3.
+
+The application consists of several functions that connect to either
+a hosted sql database or an AWS resource to assist with uploading data
+to AWS S3. The app is intended to run on AWS Lambda.
+"""
+
 import logging
 from pg8000.native import Connection
 import pg8000.exceptions as pge
@@ -20,13 +26,14 @@ secrets = boto3.client("secretsmanager")
 
 
 def lambda_handler(event, context):
-    """Handles functions to pull data from database and upload as a csv
-    file to S3 Checks if the data exists on s3 and if the table has been
-    updated since the last interval before uploading.
-    Args:
-        event:
+    """Handles functions to pull data from a database to upload as a csv
+    file to S3.
+    Checks if the data exists on s3 and if the table has been updated
+    since the last interval before uploading.
 
-        context:
+    Args:
+        event: an AWS event object.
+        context: a valid AWS lambda Python context object.
     """
     credentials = get_secret_value('database_credentials')
     TABLES_LIST = ['staff', 'transaction', 'design', 'address',
@@ -34,7 +41,7 @@ def lambda_handler(event, context):
                    'payment_type', 'currency', 'department',
                    'purchase_order']
     BUCKET = os.environ.get('TF_ING_BUCKET')
-    INTERVAL = '30 minutes'
+    INTERVAL = '3 minutes'
     has_updated = False
     columns = collect_column_headers(credentials, TABLES_LIST)
     bucket_keys = get_keys_from_table_names(TABLES_LIST)
@@ -60,9 +67,11 @@ def get_secret_value(secret_name):
 
     Args:
         secret_id: The Secret Name that holds the username and password
-                    for your data base
+                    for your data base.
+
     Returns:
-        Dictionary containing data on secret
+        Dictionary containing data on secret.
+
     Raises:
         ResourseNotFoundException
         ParamValidationError
@@ -90,12 +99,15 @@ def get_secret_value(secret_name):
 
 
 def get_connection(credentials):
-    """Attempts connection with database
+    """Attempts connection with database.
+
     Args:
         credentials: The credentials required to access the database
         stored in secretsmanager as a dictionary.
+
     Returns:
-        Connection class
+        An instance of the Connection Class.
+
     Raises:
         InterfaceError
         RuntimeError
@@ -109,7 +121,6 @@ def get_connection(credentials):
         DATABASE = credentials["database"]
     except KeyError as e:
         logger.error("Credentials key not in secret")
-
         raise e
     else:
         try:
@@ -122,10 +133,12 @@ def get_connection(credentials):
 
 def get_keys_from_table_names(tables, file_path=""):
     """Appends '.csv' to items in list.
+
     Args:
         tables: A list of table names.
-        file_path : Add a file path for a folder-like structure in S3.
-        (OPTIONAL)
+        (OPTIONAL) file_path : Add a file path for a folder-like
+        structure in S3.
+
     Returns:
         A list of table names with appended file extension.
     """
@@ -134,12 +147,15 @@ def get_keys_from_table_names(tables, file_path=""):
 
 def sql_select_column_headers(credentials, table):
     """Queries database find column headers for a table.
+
     Args:
         credentials: The credentials required to access the database
         stored in secretsmanager as a dictionary.
         table: The name of a table.
+
     Returns:
         A list of column headers for that table.
+
     Raises:
         Database Error
     """
@@ -155,10 +171,12 @@ def sql_select_column_headers(credentials, table):
 
 def collect_column_headers(credentials, tables):
     """Collects column headers from sql query into a list.
+
     Args:
-        credentials: The credentials required to access the database
+        credentials: The credentials required to access the database.
         stored in secretsmanager as a dictionary.
         table: A list of table names.
+
     Returns:
         A collection of nested lists containing all table headers.
     """
@@ -173,12 +191,15 @@ def collect_column_headers(credentials, tables):
 
 def sql_select_query(credentials, table):
     """Queries database to select all data from a table.
+
     Args:
         credentials: The credentials required to access the database
         stored in secretsmanager as a dictionary.
         table: The name of the table to get data from.
+
     Returns:
         A collection of nested lists of row data
+
     Raises:
         DatabaseError
     """
@@ -198,10 +219,12 @@ def sql_select_updated(credentials, table, interval):
         credentials: The credentials required to access the database
         stored in secretsmanager as a dictionary.
         table: The name of the table to get data from.
-        interval: The time between interval and now to check against the
-        'last_updated' column
+        interval: A length of time going backwards from 'now' to check
+        against the 'last_updated' column.
+
     Returns:
-        A boolean for whether the table has been updated
+        A boolean for whether the table has been updated.
+
     Raises:
         DatabaseError
     """
@@ -220,11 +243,13 @@ def sql_select_updated(credentials, table, interval):
 
 def check_key_exists(bucket_name, bucket_key):
     """Checks if key exists in s3.
+
     Args:
-        bucket_name: The name of the bucket containing the file
-        bucket_key: The filepath and name of the file in s3
+        bucket_name: The name of the bucket containing the file.
+        bucket_key: The filepath and name of the file in s3.
+
     Returns:
-        A boolean for whether the key exists
+        A boolean for whether the key exists.
     """
     try:
         s3_client.head_object(Bucket=bucket_name, Key=bucket_key)
@@ -240,6 +265,7 @@ def data_to_bucket_csv_file(
 ):
     """Takes data collected from 'sql_get_all_data' function
         and uploads it to S3 as a csv file.
+
     Args:
         table_name: The name of the table to get data from.
         column_headers: A collection of nested lists containing
@@ -247,8 +273,10 @@ def data_to_bucket_csv_file(
         bucket_name: The name of the bucket in S3.
         bucket_key: The name of the file and path the data will
         be stored in.
+
     Returns:
         Formated data as a list of dictionaries.
+
     Raises:
         NoSuchBucket
         ParamValidationError
