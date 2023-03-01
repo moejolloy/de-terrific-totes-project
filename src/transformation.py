@@ -1,3 +1,12 @@
+""" Transforms data from a '.csv' file in AWS S3 to Parquet format and
+uploads formatted data to S3.
+
+The application consists of several formatting functions for each table
+as well as functions to load and upload data to AWS S3.
+
+The app is intended to run on AWS Lambda.
+"""
+
 import boto3
 import pandas as pd
 import logging
@@ -21,7 +30,7 @@ def transform_data(event, context):
         context: a valid AWS lambda Python context object.
 
     Returns:
-        a dictionary with keys of the files to be uploaded
+        A dictionary with keys of the files to be uploaded
         values True if file successfully processed, else None.
     """
     INGEST_BUCKET = os.environ.get('TF_ING_BUCKET')
@@ -87,11 +96,13 @@ def transform_data(event, context):
 def format_dim_staff(staff_df, dept_df):
     """ Formats staff and department dataframes into
         correctly formatted dataframe.
+
     Args:
         staff_df: dataframe containing data of staff.csv.
         dept_df: dataframe containing data of departments.csv.
+
     Returns:
-        dataframe of correctly formatted staff data.
+        Dataframe of correctly formatted staff data.
     """
     staff_dept = pd.merge(staff_df, dept_df,
                           how='left', on="department_id")
@@ -102,10 +113,12 @@ def format_dim_staff(staff_df, dept_df):
 
 def format_dim_location(location_df):
     """ Formats location dataframe into correctly formatted dataframe.
+
     Args:
         location_df: dataframe containing data of addresses.csv.
+
     Returns:
-        dataframe of correctly formatted location data.
+        Dataframe of correctly formatted location data.
     """
     location_df = location_df.rename(columns={"address_id": "location_id"})
     dim_location = location_df.iloc[:, 0:8]
@@ -114,10 +127,12 @@ def format_dim_location(location_df):
 
 def format_dim_design(design_df):
     """ Formats design dataframe into correctly formatted dataframe.
+
     Args:
         design_df: dataframe containing data of design.csv.
+
     Returns:
-        dataframe of correctly formatted design data.
+        Dataframe of correctly formatted design data.
     """
     return design_df[["design_id",
                       "design_name", "file_location", "file_name"]]
@@ -125,13 +140,15 @@ def format_dim_design(design_df):
 
 def format_dim_date(start='2000-01-01', end='2049-12-31'):
     """ Formats given dates into correctly formatted dataframe.
+
     Args:
         start: The first date to be included in the dataframe.
                Defaults to 2000-01-01.
         end: The end date to be included in the dataframe.
              Defaults to 2049-12-31.
+
     Returns:
-            dataframe of correctly formatted date data
+            Dataframe of correctly formatted date data.
     """
     dim_date = pd.DataFrame({"date_id": pd.date_range(start, end)})
     dim_date["year"] = dim_date['date_id'].dt.year
@@ -146,10 +163,13 @@ def format_dim_date(start='2000-01-01', end='2049-12-31'):
 
 def format_dim_currency(currency_df):
     """ Formats currency dataframe into correctly formatted dataframe.
+
     Args:
         currency_df: dataframe containing data from currency.csv.
+
     Returns:
-        dataframe of correctly formatted currency data.
+        Dataframe of correctly formatted currency data.
+
     """
     currency_df['currency_name'] = [
         'British Pound sterling', 'United States dollar', 'Euro']
@@ -159,11 +179,13 @@ def format_dim_currency(currency_df):
 def format_dim_counterparty(counterparty_df, address_df):
     """ Formats counterparty and address dataframes
         into a correctly formatted dataframe.
+
     Args:
         counterparty_df: dataframe containing data from counterparty.csv.
         address_df: dataframe containing data from address.csv.
+
     Returns:
-        dataframe of correctly formatted counterparty data.
+        Dataframe of correctly formatted counterparty data.
     """
     location_df = format_dim_location(address_df)
     location_df = location_df.rename(
@@ -199,12 +221,13 @@ def format_dim_counterparty(counterparty_df, address_df):
 
 def format_dim_transaction(transaction_df):
     """ Formats transaction dataframe into correctly formatted dataframe.
+
     Args:
         transaction_df: dataframe containing data from transaction.csv.
-    Returns:
-        dataframe of correctly formatted transaction data.
-    """
 
+    Returns:
+        Dataframe of correctly formatted transaction data.
+    """
     transaction_df = transaction_df[["transaction_id", "transaction_type",
                                      "sales_order_id", "purchase_order_id"]]
     transaction_df = transaction_df.astype({'sales_order_id': 'Int64',
@@ -214,21 +237,25 @@ def format_dim_transaction(transaction_df):
 
 def format_dim_payment_type(payment_df):
     """ Formats payment dataframe into correctly formatted dataframe.
+
     Args:
         payment_df: dataframe containing data from payment.csv.
-    Returns:
-        dataframe of correctly formatted payment data.
-    """
 
+    Returns:
+        Dataframe of correctly formatted payment data.
+    """
     return payment_df[["payment_type_id", "payment_type_name"]]
 
 
 def format_fact_sales_order(sales_order_df):
-    """ Formats sales_order dataframe into correctly formatted dataframe.
+    """ Formats sales_order dataframe into correctly formatted
+    dataframe.
+
     Args:
         sales_order_df: dataframe of data from sales_order.csv.
+
     Returns:
-        dataframe of correctly formatted sales order data.
+        Dataframe of correctly formatted sales order data.
     """
     sales_order_df["sales_record_id"] = range(1, 1+len(sales_order_df))
     sales_order_df["created_date"] = sales_order_df["created_at"].dt.date
@@ -260,11 +287,14 @@ def format_fact_sales_order(sales_order_df):
 
 
 def format_fact_purchase_order(purchase_order_df):
-    """ Formats purchase_order dataframe into correctly formatted dataframe.
+    """ Formats purchase_order dataframe into correctly formatted
+    dataframe.
+
     Args:
         purchase_order_df: dataframe of data from purchase_order.csv.
+
     Returns:
-        dataframe of correctly formatted purchase order data.
+        Dataframe of correctly formatted purchase order data.
     """
     purchase_order_df["purchase_record_id"] = range(
         1, 1+len(purchase_order_df))
@@ -297,10 +327,12 @@ def format_fact_purchase_order(purchase_order_df):
 
 def format_fact_payment(payment_df):
     """ Formats payment dataframe into correctly formatted dataframe.
+
     Args:
         payment_df: dataframe of data from payment.csv.
+
     Returns:
-        dataframe of correctly formatted payment data.
+        Dataframe of correctly formatted payment data.
     """
     payment_df["payment_record_id"] = range(1, 1+len(payment_df))
     payment_df["created_date"] = payment_df["created_at"].dt.date
@@ -329,16 +361,21 @@ def format_fact_payment(payment_df):
 
 
 def load_csv_from_s3(bucket, key, parse_dates=[]):
-    """ Retrieve a CSV file from an S3 bucket
+    """ Retrieve a CSV file from an S3 bucket.
 
     Args:
         bucket: Name of the S3 bucket from which to retrieve the file.
         key: Key that the file is stored under in the named S3 bucket.
-        parse_dates: a list of column names which contain
-                     dates to be converted to datetime objects.
+        parse_dates: a list of column names which contain dates to be
+        converted to datetime objects.
 
     Returns:
         DataFrame containing the contents of the CSV file.
+
+    Raises:
+        NoSuchBucket
+        NoSuchKey
+        RuntimeError
     """
     try:
         s3_response_object = s3.get_object(
@@ -361,12 +398,20 @@ def export_parquet_to_s3(data, bucket, key):
     """ Convert DataFrame to parquet file and store in an S3 bucket
 
     Args:
-        data: Dataframe containing the data to store in the parquet file.
+        data: Dataframe containing the data to store in the parquet
+        file.
         bucket: Name of the S3 bucket in which to store the file.
-        key: Key that the file will be stored under in the named S3 bucket.
+        key: Key that the file will be stored under in the named
+        S3 bucket.
 
     Returns:
         True if the function execution was successful, else None.
+
+    Raises:
+        FileNotFoundError
+        ValueError
+        AttributeError
+        RuntimeError
     """
     try:
         data.to_parquet(f's3://{bucket}/{key}', index=True)
