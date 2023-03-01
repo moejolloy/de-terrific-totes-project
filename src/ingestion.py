@@ -1,8 +1,10 @@
-"""Uploads database table data to separate '.csv' files on S3.
+""" Uploads database table data to separate '.csv' files on S3.
 
 The application consists of several functions that connect to either
 a hosted sql database or an AWS resource to assist with uploading data
-to AWS S3. The app is intended to run on AWS Lambda.
+to AWS S3.
+
+The app is intended to run on AWS Lambda.
 """
 
 import logging
@@ -26,8 +28,8 @@ secrets = boto3.client("secretsmanager")
 
 
 def lambda_handler(event, context):
-    """Handles functions to pull data from a database to upload as a csv
-    file to S3.
+    """ Handles functions to pull data from a database to upload as a
+    csv file to S3.
     Checks if the data exists on s3 and if the table has been updated
     since the last interval before uploading.
 
@@ -63,7 +65,7 @@ def lambda_handler(event, context):
 
 
 def get_secret_value(secret_name):
-    """Finds data for a specified secret on SecretsManager.
+    """ Finds data for a specified secret on SecretsManager.
 
     Args:
         secret_id: The Secret Name that holds the username and password
@@ -99,7 +101,7 @@ def get_secret_value(secret_name):
 
 
 def get_connection(credentials):
-    """Attempts connection with database.
+    """ Attempts connection with database.
 
     Args:
         credentials: The credentials required to access the database
@@ -131,7 +133,7 @@ def get_connection(credentials):
 
 
 def get_keys_from_table_names(tables, file_path=""):
-    """Appends '.csv' to items in list.
+    """ Appends '.csv' to items in list.
 
     Args:
         tables: A list of table names.
@@ -145,7 +147,7 @@ def get_keys_from_table_names(tables, file_path=""):
 
 
 def sql_select_column_headers(credentials, table):
-    """Queries database find column headers for a table.
+    """ Queries database find column headers for a table.
 
     Args:
         credentials: The credentials required to access the database
@@ -169,7 +171,7 @@ def sql_select_column_headers(credentials, table):
 
 
 def collect_column_headers(credentials, tables):
-    """Collects column headers from sql query into a list.
+    """ Collects column headers from sql query into a list.
 
     Args:
         credentials: The credentials required to access the database.
@@ -189,7 +191,7 @@ def collect_column_headers(credentials, tables):
 
 
 def sql_select_query(credentials, table):
-    """Queries database to select all data from a table.
+    """ Queries database to select all data from a table.
 
     Args:
         credentials: The credentials required to access the database
@@ -211,7 +213,7 @@ def sql_select_query(credentials, table):
 
 
 def sql_select_updated(credentials, table, interval):
-    """Queries database to check a table has been updated since the
+    """ Queries database to check a table has been updated since the
     last interval.
 
     Args:
@@ -241,7 +243,7 @@ def sql_select_updated(credentials, table, interval):
 
 
 def check_key_exists(bucket_name, bucket_key):
-    """Checks if key exists in s3.
+    """ Checks if key exists in s3.
 
     Args:
         bucket_name: The name of the bucket containing the file.
@@ -262,7 +264,7 @@ def check_key_exists(bucket_name, bucket_key):
 def data_to_bucket_csv_file(
     credentials, table_name, column_headers, bucket_name, bucket_key
 ):
-    """Takes data collected from 'sql_get_all_data' function
+    """ Takes data collected from 'sql_get_all_data' function
         and uploads it to S3 as a csv file.
 
     Args:
