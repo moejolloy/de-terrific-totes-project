@@ -167,7 +167,7 @@ This script loads the Parquet files from the processed data bucket and places th
 
 The Python scripts are each zipped alongside their runtime dependencies into a single file, which is used by AWS Lambda to run the processes with appropriate triggers. Pandas is too large to zip without creating a Lambda Layer (which our Whizlabs AWS instances lacked the permissions to create), so we used the pre-built Pandas layer which AWS provide.
 
-Each file is thoroughly tested using mocking and patching, and our testing coverage currently stands at 96%.
+Each file is thoroughly tested using mocking and patching, and our testing coverage currently stands at 100%.
 
 ---
 
