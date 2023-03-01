@@ -559,7 +559,7 @@ def load_func(bucket, file, parse_dates=[]):
 def load_func_error(bucket, file, parse_dates=[]):
     if file == "staff.csv":
         return True
-    elif file == "departments.csv":
+    elif file == "department.csv":
         return True
     elif file == "counterparty.csv":
         return True

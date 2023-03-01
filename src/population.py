@@ -1,6 +1,5 @@
 import logging
 import boto3
-import botocore
 import json
 import pandas as pd
 from io import BytesIO
@@ -68,16 +67,6 @@ def get_secret_value(secret_name):
     secrets = boto3.client("secretsmanager")
     try:
         secret_value = secrets.get_secret_value(SecretId=secret_name)
-    except secrets.exceptions.ResourceNotFoundException as e:
-        logger.error(f"The requested secret {secret_name} was not found")
-        raise e
-    except botocore.exceptions.ParamValidationError as e:
-        logger.error("The request has invalid params")
-        raise e
-    except botocore.exceptions.ClientError as e:
-        if e.response["Error"]["Code"] == "UnrecognizedClientException":
-            logger.error("Security token invalid, check permissions")
-            raise e
     except Exception as e:
         logger.error(e)
         raise RuntimeError
@@ -103,12 +92,6 @@ def load_parquet_from_s3(bucket, key):
         df = s3_response_object['Body'].read()
         df = pd.read_parquet(BytesIO(df))
         return df
-    except s3.exceptions.NoSuchBucket:
-        logger.error('Bucket does not exist')
-        raise s3.exceptions.NoSuchBucket({}, '')
-    except s3.exceptions.NoSuchKey:
-        logger.error("Key not found in bucket")
-        raise s3.exceptions.NoSuchKey({}, '')
     except Exception as e:
         logger.error(e)
         raise RuntimeError
