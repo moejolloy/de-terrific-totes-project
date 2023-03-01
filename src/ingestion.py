@@ -69,7 +69,7 @@ def get_secret_value(secret_name):
 
     Args:
         secret_id: The Secret Name that holds the username and password
-                    for your data base.
+                    for your database.
 
     Returns:
         Dictionary containing data on secret.
