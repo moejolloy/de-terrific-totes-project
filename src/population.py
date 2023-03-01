@@ -149,9 +149,9 @@ def insert_data_into_db(data_df, table):
                 "dim_payment_type": "payment_type_id",
                 "dim_staff": "staff_id",
                 "dim_transaction": "transaction_id",
-                "fact_payment": "payment_id",
-                "fact_purchase_order": "purchase_order_id",
-                "fact_sales_order": "sales_order_id"
+                "fact_payment": "payment_record_id",
+                "fact_purchase_order": "purchase_record_id",
+                "fact_sales_order": "sales_record_id"
             }
 
             dw_query = f'SELECT * FROM {table};'
@@ -187,6 +187,9 @@ def insert_data_into_db(data_df, table):
                 else:
                     dw_df = dw_df.astype(TROUBLE_TABLES[table])
 
+            print(data_df)
+            print(dw_df)
+
             df_all = data_df.merge(
                 dw_df, on=dw_table_titles, how='left', indicator=True)
             df_all = df_all.drop(df_all[df_all['_merge'] == 'both'].index)
@@ -196,6 +199,8 @@ def insert_data_into_db(data_df, table):
                 new_and_updated = new_and_updated.astype(
                     {'sales_order_id': 'Int64', 'purchase_order_id': 'Int64'})
                 new_and_updated = new_and_updated.replace({np.nan: None})
+
+            print(new_and_updated)
 
             updated_rows = new_and_updated[
                 new_and_updated[KEY[f'{table}']].isin(

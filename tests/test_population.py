@@ -111,6 +111,7 @@ def test_insert_data_into_db_dim_transaction(mock_gsv, mock_extras,
 def test_insert_data_into_db_fact_sales_order(mock_gsv, mock_extras,
                                               mock_connect, caplog):
     sales_data = {
+        "sales_record_id": [1, 2, 3],
         "sales_order_id": [1, 2, 3],
         "staff_id": [1, 2, 3],
         "created_date": [test_date, test_date, test_date],
@@ -137,6 +138,7 @@ def test_insert_data_into_db_fact_sales_order(mock_gsv, mock_extras,
     mock_connect.return_value.cursor.return_value.fetchall.return_value \
         = df.values.tolist()
     mock_connect.return_value.cursor.return_value.description = [
+        ["sales_record_id"],
         ["sales_order_id"],
         ["staff_id"],
         ["created_date"],
