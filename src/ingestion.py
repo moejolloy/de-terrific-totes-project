@@ -112,7 +112,6 @@ def get_connection(credentials):
         InterfaceError
         RuntimeError
     """
-
     try:
         HOST = credentials["host"]
         PORT = credentials["port"]
