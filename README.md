@@ -83,7 +83,7 @@ There are two primary ways of deploying the infrastructure and functionality con
      {"host": "somewhere-on-internet", "port": "5432", "database": "dummy", "user": "dummy", "password": "your-password"}
      ```
 
-   - Change the name of the bucket for storing the Terraform state file in **backend.tf** and **test-and-deploy.yml** files. This will ensure a unique bucket is created.
+   - Change the name of the bucket for storing the Terraform state file in **backend.tf** and **test-and-deploy.yaml** files. This will ensure a unique bucket is created.
    - On your forked repo page, click on the Actions menu, then on the Final Test and Deploy workflow. Next to the notice that this repo has a workflow dispatch, click on Run Workflow, from main branch and in dev environment.
    - In future, your code will redeploy when you push code to the main branch or trigger this dispatch again. You may wish to create branch protections and remove the workflow dispatch in the YAML file to ensure that this only happens with a degree of control.
 
@@ -121,11 +121,12 @@ There are two primary ways of deploying the infrastructure and functionality con
      aws s3 mb s3://terraform-state-bucket-totedd-<SUFFIX>
      ```
 
-   - set the name of the state bucket in the **test-and-deploy.yml** and **backend.tf** files to match the bucket you have just created.
+   - Set the name of the state bucket in the **test-and-deploy.yaml** and **backend.tf** files to match the bucket you have just created.
    - Apply `terraform init -reconfigure` to initialise terraform and use the state file bucket as a backend.
-   - Terraform plan and apply (see note below)
-   - When using both `terraform plan` and `terraform apply` commands, terraform will prompt you to provide the sensitive values database_info and warehouse_info. Use [this](#database-and-data-warehouse-credentials-formatting) template.
-   - To avoid manual input use a **secret.tfvars** file saved in the terraform folder and the command: `terraform apply -var-file="secret.tfvars"`.
+   - Run `terraform plan` and finally `terraform apply` **(see note below)**
+   
+      - Note: when using either `terraform plan` or `terraform apply` commands, terraform will prompt you to provide the sensitive values **database_info** and **warehouse_info**. Use [this](#database-and-data-warehouse-credentials-formatting) formatting template.
+      - To avoid manual input use a **secret.tfvars** file saved in the terraform folder and the command: `terraform apply -var-file="secret.tfvars"`
 
      #### Format Required for AWS to Parse Secrets as Key / Value Pairs in secret.tfvars:
 
@@ -150,17 +151,19 @@ There are two primary ways of deploying the infrastructure and functionality con
 
 The three Python files held in the src folder correspond to the ETL process which the pipeline builds.
 
-### Ingestion.py
+#### **Ingestion.py**
 
 This script extracts data from a PostgreSQL database and places it into an S3 bucket for ingested data as a series of CSV files corresponding to the tables of the ingested database.
 
-### Transformation.py
+#### **Transformation.py**
 
 This script retrieves the ingested files, then processes and transforms the data, converting it from CSV to Parquet format, and models and rationalises the data to correspond to the schema requested by the fictional clients Terrific Totes. It puts the newly created Parquet files into our second S3 bucket for processed data, now corresponding to each table in the remodelled schema.
 
-### Population.py
+#### **Population.py**
 
 This script loads the Parquet files from the processed data bucket and places them into the data warehouse as requested by Terrific Totes.
+
+---
 
 The Python scripts are each zipped alongside their runtime dependencies into a single file, which is used by AWS Lambda to run the processes with appropriate triggers. Pandas is too large to zip without creating a Lambda Layer (which our Whizlabs AWS instances lacked the permissions to create), so we used the pre-built Pandas layer which AWS provide.
 
