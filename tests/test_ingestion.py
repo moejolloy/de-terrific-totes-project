@@ -117,7 +117,7 @@ def test_function_raises_and_logs_error_if_bucket_key_invalid(s3, s3_bucket,
 @patch("src.ingestion.Connection")
 @patch("src.ingestion.data_to_bucket_csv_file")
 @patch("src.ingestion.check_key_exists", return_value=False)
-@patch("src.ingestion.sql_select_updated", return_value=False)
+@patch("src.ingestion.sql_check_updated", return_value=False)
 def test_function_uploads_data_for_first_time_on_s3(
     mock_sql, mock_no_key, mock_upload_function, mock_connection,
     mock_secret, caplog
@@ -140,7 +140,7 @@ def test_function_uploads_data_for_first_time_on_s3(
 @patch("src.ingestion.Connection")
 @patch("src.ingestion.data_to_bucket_csv_file")
 @patch("src.ingestion.check_key_exists", return_value=True)
-@patch("src.ingestion.sql_select_updated", return_value=True)
+@patch("src.ingestion.sql_check_updated", return_value=True)
 def test_function_uploads_data_if_updated_is_true(
     mock_sql, mock_key, mock_upload_function, mock_connection,
     mock_secret, caplog
@@ -163,7 +163,7 @@ def test_function_uploads_data_if_updated_is_true(
 @patch("src.ingestion.Connection")
 @patch("src.ingestion.data_to_bucket_csv_file")
 @patch("src.ingestion.check_key_exists", return_value=True)
-@patch("src.ingestion.sql_select_updated", return_value=False)
+@patch("src.ingestion.sql_check_updated", return_value=False)
 def test_function_does_not_upload_data_if_updated_is_false(
     mock_sql, mock_key, mock_upload_function, mock_connection,
     mock_secret, caplog

@@ -47,17 +47,17 @@ def lambda_handler(event, context):
     has_updated = False
     columns = collect_column_headers(credentials, TABLES_LIST)
     bucket_keys = get_keys_from_table_names(TABLES_LIST)
-    data_on_s3 = check_key_exists(BUCKET, bucket_keys[0])
+    is_data_on_s3 = check_key_exists(BUCKET, bucket_keys[0])
     for index, table in enumerate(TABLES_LIST):
-        if sql_select_updated(credentials, table,
-                              INTERVAL) or not data_on_s3:
+        if sql_check_updated(credentials, table,
+                             INTERVAL) or not is_data_on_s3:
 
             data_to_bucket_csv_file(
                 credentials, table, columns[index], BUCKET,
                 bucket_keys[index]
             )
-
             has_updated = True
+
     if has_updated:
         logger.info("SUCCESSFUL INGESTION")
     else:
@@ -212,7 +212,7 @@ def sql_select_query(credentials, table):
         raise e
 
 
-def sql_select_updated(credentials, table, interval):
+def sql_check_updated(credentials, table, interval):
     """ Queries database to check a table has been updated since the
     last interval.
 
