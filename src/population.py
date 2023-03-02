@@ -130,7 +130,7 @@ def insert_data_into_db(data_df, table):
     """ Insert data into tables within the Data Warehouse DB.
 
     Args:
-        data: DataFrame representing the rows to insert into the table.
+        data: DataFrame representing the data to insert into the table.
         table: String of the table name in which to insert data.
 
     Returns:
