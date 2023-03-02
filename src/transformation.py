@@ -1,4 +1,4 @@
-""" Transforms data from a '.csv' file in AWS S3 to dataframes in 
+""" Transforms data from a '.csv' file in AWS S3 to dataframes in
 Parquet format and uploads formatted data to S3.
 
 The script consists of several formatting functions for each table
