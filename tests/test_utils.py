@@ -94,6 +94,12 @@ def test_logging_other_errors_load(caplog):
         assert caplog.records[0].levelno == logging.ERROR
 
 
+def test_export_parquet_to_s3():
+    with patch('src.transformation.pd.DataFrame.to_parquet'):
+        assert src.transformation.export_parquet_to_s3(
+            pd.DataFrame([[1, 2], [3, 4]]), '', '')
+
+
 def test_export_parquet_to_s3_FileNotFoundError_handled():
     with patch('src.transformation.pd.DataFrame.to_parquet') as mock:
         response_error = FileNotFoundError

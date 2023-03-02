@@ -180,3 +180,14 @@ def test_function_does_not_upload_data_if_updated_is_false(
 
     assert caplog.records[0].levelno == logging.INFO
     assert caplog.records[0].msg == "NO FILES TO UPDATE"
+
+
+@patch("src.ingestion.boto3")
+def test_get_secret_value_error(mock_boto):
+    from src.ingestion import get_secret_value
+    err = botocore.errorfactory.ClientError(
+        {'Error': {"Code": "UnrecognizedClientException"}}, '')
+    err.response["Error"]["Code"] == "UnrecognizedClientException"
+    mock_boto.client.return_value.get_secret_value.side_effect = err
+    with pytest.raises(botocore.errorfactory.ClientError):
+        get_secret_value('test')
