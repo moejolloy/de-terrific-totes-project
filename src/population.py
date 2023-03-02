@@ -149,9 +149,9 @@ def insert_data_into_db(data_df, table):
                 "dim_payment_type": "payment_type_id",
                 "dim_staff": "staff_id",
                 "dim_transaction": "transaction_id",
-                "fact_payment": "payment_id",
-                "fact_purchase_order": "purchase_order_id",
-                "fact_sales_order": "sales_order_id"
+                "fact_payment": "payment_record_id",
+                "fact_purchase_order": "purchase_record_id",
+                "fact_sales_order": "sales_record_id"
             }
 
             dw_query = f'SELECT * FROM {table};'
