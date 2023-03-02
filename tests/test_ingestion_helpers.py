@@ -182,36 +182,36 @@ def test_select_query_logs_error_if_table_does_not_exist(
 
 
 @patch("src.ingestion.Connection")
-def test_select_updated_returns_true_if_database_has_been_updated_at_interval(
+def test_check_updated_returns_true_if_database_has_been_updated_at_interval(
     mock_connection,
 ):
-    from src.ingestion import sql_select_updated
+    from src.ingestion import sql_check_updated
 
     test_result = [["some data", 1]]
     mock_connection().run.return_value = test_result
-    assert sql_select_updated(MOCK_CREDS, "table", "2 days")
+    assert sql_check_updated(MOCK_CREDS, "table", "2 days")
 
 
 @patch("src.ingestion.Connection")
-def test_select_updated_returns_false_if_database_is_not_updated_at_interval(
+def test_check_updated_returns_false_if_database_is_not_updated_at_interval(
     mock_connection
 ):
-    from src.ingestion import sql_select_updated
+    from src.ingestion import sql_check_updated
 
     test_result = []
     mock_connection().run.return_value = test_result
-    assert not sql_select_updated(MOCK_CREDS, "table", "1 day")
+    assert not sql_check_updated(MOCK_CREDS, "table", "1 day")
 
 
 @patch("src.ingestion.Connection")
-def test_select_updated_logs_error_if_table_does_not_exist(
+def test_check_updated_logs_error_if_table_does_not_exist(
         mock_connection, caplog):
-    from src.ingestion import sql_select_updated
+    from src.ingestion import sql_check_updated
 
     mock_connection().run.side_effect = pge.DatabaseError
 
     with pytest.raises(pge.DatabaseError):
-        sql_select_updated(MOCK_CREDS, "test", 1)
+        sql_check_updated(MOCK_CREDS, "test", 1)
 
     assert caplog.records[0].levelno == logging.ERROR
     assert caplog.records[0].msg == (

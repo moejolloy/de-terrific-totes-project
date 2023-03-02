@@ -1,3 +1,12 @@
+""" Populates a data warehouse with data from AWS S3.
+
+The script consists of several functions that retieve data from S3,
+connect to the data warehouse via credentials from AWS secrets manager,
+and update the database with new data.
+
+The script is intended to run on AWS Lambda.
+"""
+
 import logging
 import boto3
 import json
@@ -18,8 +27,8 @@ def lambda_handler(event, context):
         data into the Data Warehouse.
 
     Args:
-        event: an AWS event object.
-        context: a valid AWS lambda Python context object.
+        event: An AWS event object.
+        context: A valid AWS lambda Python context object.
 
     Returns:
         Dictionary with keys of table names whos values are booleans
@@ -55,9 +64,11 @@ def get_secret_value(secret_name):
 
     Args:
         secret_id: The Secret Name that holds the username and password
-                    for your data base
+        for your data base.
+
     Returns:
-        Dictionary containing data on secret
+        Dictionary containing data on secret.
+
     Raises:
         ResourseNotFoundException
         ParamValidationError
@@ -76,7 +87,7 @@ def get_secret_value(secret_name):
 
 
 def load_parquet_from_s3(bucket, key):
-    """ Retrieve a Parquet file from an S3 bucket
+    """ Retrieve a Parquet file from an S3 bucket.
 
     Args:
         bucket: Name of the S3 bucket from which to retrieve the file.
@@ -98,14 +109,14 @@ def load_parquet_from_s3(bucket, key):
 
 
 def get_warehouse_connection(credentials):
-    """ Establish connection to the Data Warehouse DB
+    """ Establish connection to the Data Warehouse DB.
 
     Args:
-        credentials: Dictionary containing connection parameters
-                     valid keys: "host", "dbname", "user", "password", "port"
+        credentials: Dictionary containing connection parameters.
+        valid keys: "host", "dbname", "user", "password", "port".
 
     Returns:
-        psycopg2 Connection object to the Data Warehouse DB
+        psycopg2 Connection object to the Data Warehouse DB.
     """
     try:
         return psycopg2.connect(**credentials)
@@ -116,11 +127,11 @@ def get_warehouse_connection(credentials):
 
 
 def insert_data_into_db(data_df, table):
-    """ Insert data into tables within the Data Warehouse DB
+    """ Insert data into tables within the Data Warehouse DB.
 
     Args:
-        data: DataFrame representing the data to insert into the table
-        table: string of the table name in which to insert data
+        data: DataFrame representing the data to insert into the table.
+        table: String of the table name in which to insert data.
 
     Returns:
         None
