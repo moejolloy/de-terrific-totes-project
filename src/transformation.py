@@ -1,10 +1,10 @@
-""" Transforms data from a '.csv' file in AWS S3 to Parquet format and
-uploads formatted data to S3.
+""" Transforms data from a '.csv' file in AWS S3 to dataframes in 
+Parquet format and uploads formatted data to S3.
 
-The application consists of several formatting functions for each table
-as well as functions to load and upload data to AWS S3.
+The script consists of several formatting functions for each table
+as well as functions to load and upload data to S3.
 
-The app is intended to run on AWS Lambda.
+The script is intended to run on AWS Lambda.
 """
 
 import boto3
@@ -26,8 +26,8 @@ def transform_data(event, context):
         Uploads to s3 processing bucket.
 
     Args:
-        event: an AWS event object.
-        context: a valid AWS lambda Python context object.
+        event: An AWS event object.
+        context: A valid AWS lambda Python context object.
 
     Returns:
         A dictionary with keys of the files to be uploaded
@@ -98,8 +98,8 @@ def format_dim_staff(staff_df, dept_df):
         correctly formatted dataframe.
 
     Args:
-        staff_df: dataframe containing data of staff.csv.
-        dept_df: dataframe containing data of departments.csv.
+        staff_df: Dataframe containing data of staff.csv.
+        dept_df: Dataframe containing data of departments.csv.
 
     Returns:
         Dataframe of correctly formatted staff data.
@@ -115,7 +115,7 @@ def format_dim_location(location_df):
     """ Formats location dataframe into correctly formatted dataframe.
 
     Args:
-        location_df: dataframe containing data of addresses.csv.
+        location_df: Dataframe containing data of addresses.csv.
 
     Returns:
         Dataframe of correctly formatted location data.
@@ -129,7 +129,7 @@ def format_dim_design(design_df):
     """ Formats design dataframe into correctly formatted dataframe.
 
     Args:
-        design_df: dataframe containing data of design.csv.
+        design_df: Dataframe containing data of design.csv.
 
     Returns:
         Dataframe of correctly formatted design data.
@@ -165,7 +165,7 @@ def format_dim_currency(currency_df):
     """ Formats currency dataframe into correctly formatted dataframe.
 
     Args:
-        currency_df: dataframe containing data from currency.csv.
+        currency_df: Dataframe containing data from currency.csv.
 
     Returns:
         Dataframe of correctly formatted currency data.
@@ -181,8 +181,8 @@ def format_dim_counterparty(counterparty_df, address_df):
         into a correctly formatted dataframe.
 
     Args:
-        counterparty_df: dataframe containing data from counterparty.csv.
-        address_df: dataframe containing data from address.csv.
+        counterparty_df: Dataframe containing data from counterparty.csv.
+        address_df: Dataframe containing data from address.csv.
 
     Returns:
         Dataframe of correctly formatted counterparty data.
@@ -223,7 +223,7 @@ def format_dim_transaction(transaction_df):
     """ Formats transaction dataframe into correctly formatted dataframe.
 
     Args:
-        transaction_df: dataframe containing data from transaction.csv.
+        transaction_df: Dataframe containing data from transaction.csv.
 
     Returns:
         Dataframe of correctly formatted transaction data.
@@ -239,7 +239,7 @@ def format_dim_payment_type(payment_df):
     """ Formats payment dataframe into correctly formatted dataframe.
 
     Args:
-        payment_df: dataframe containing data from payment.csv.
+        payment_df: Dataframe containing data from payment.csv.
 
     Returns:
         Dataframe of correctly formatted payment data.
@@ -252,7 +252,7 @@ def format_fact_sales_order(sales_order_df):
     dataframe.
 
     Args:
-        sales_order_df: dataframe of data from sales_order.csv.
+        sales_order_df: Dataframe of data from sales_order.csv.
 
     Returns:
         Dataframe of correctly formatted sales order data.
@@ -291,7 +291,7 @@ def format_fact_purchase_order(purchase_order_df):
     dataframe.
 
     Args:
-        purchase_order_df: dataframe of data from purchase_order.csv.
+        purchase_order_df: Dataframe of data from purchase_order.csv.
 
     Returns:
         Dataframe of correctly formatted purchase order data.
@@ -329,7 +329,7 @@ def format_fact_payment(payment_df):
     """ Formats payment dataframe into correctly formatted dataframe.
 
     Args:
-        payment_df: dataframe of data from payment.csv.
+        payment_df: Dataframe of data from payment.csv.
 
     Returns:
         Dataframe of correctly formatted payment data.
@@ -366,7 +366,7 @@ def load_csv_from_s3(bucket, key, parse_dates=[]):
     Args:
         bucket: Name of the S3 bucket from which to retrieve the file.
         key: Key that the file is stored under in the named S3 bucket.
-        parse_dates: a list of column names which contain dates to be
+        parse_dates: A list of column names which contain dates to be
         converted to datetime objects.
 
     Returns:

@@ -1,10 +1,10 @@
-""" Uploads database table data to separate '.csv' files on S3.
+""" Uploads database table data to separate '.csv' files on AWS S3.
 
-The application consists of several functions that connect to either
+The script consists of several functions that connect to either
 a hosted sql database or an AWS resource to assist with uploading data
-to AWS S3.
+to S3.
 
-The app is intended to run on AWS Lambda.
+The script is intended to run on AWS Lambda.
 """
 
 import logging
@@ -34,8 +34,8 @@ def lambda_handler(event, context):
     since the last interval before uploading.
 
     Args:
-        event: an AWS event object.
-        context: a valid AWS lambda Python context object.
+        event: An AWS event object.
+        context: A valid AWS lambda Python context object.
     """
     credentials = get_secret_value('database_credentials')
     TABLES_LIST = ['staff', 'transaction', 'design', 'address',
